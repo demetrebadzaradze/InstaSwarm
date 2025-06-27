@@ -1,3 +1,5 @@
+using InstaSwarm.services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -15,6 +17,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+DotNetEnv.Env.Load();   
+
+app.MapGet("/", () => {
+    InstagramClient client = new InstagramClient(DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN"));
+    return client.PostMedia(new InstagramMediaContainer(InstagramMediaType.Image, "https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www", "test https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www"));
+})      
+.WithName("GetUserInfo")
+.WithOpenApi();
 
 var summaries = new[]
 {
