@@ -161,5 +161,18 @@ namespace InstaSwarm.services
                 return LatestInstagramMediaContainer.Id;
             }
         }
+        //public async Task<string> DownloadReel(string reelUrl, string downloadPath = "./video")
+        //{
+        //    string 
+        //    YtDlpWrapper.YtDlpEngine ytdlp = new YtDlpWrapper.YtDlpEngine();
+        //    try
+        //    {
+        //        await ytdlp.DownloadVideoAsync(reelUrl, downloadPath, YtDlpWrapper.VideoQuality.Worst);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"An error occurred while downloading the reel: {ex.Message}");
+        //    }
+        //}
     }
 }

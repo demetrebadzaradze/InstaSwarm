@@ -27,4 +27,20 @@ RUN dotnet publish "./InstaSwarm.csproj" -c $BUILD_CONFIGURATION -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Install yt-dlp and dependencies as root
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3 python3-pip curl ffmpeg && \
+    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
+    chmod +x /usr/local/bin/yt-dlp && \
+    /usr/local/bin/yt-dlp --version && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    chown app:app /usr/local/bin/yt-dlp && \
+    ln -s /usr/local/bin/yt-dlp /app/yt-dlp.exe  # Symlink for potential Windows path compatibility
+
+# Switch back to non-root user
+USER app
+
 ENTRYPOINT ["dotnet", "InstaSwarm.dll"]

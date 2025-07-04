@@ -1,4 +1,5 @@
 using InstaSwarm.services;
+using System.Runtime.Intrinsics.Arm;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,12 +20,42 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 DotNetEnv.Env.Load();   
+string ytDlpPath = DotNetEnv.Env.GetString("YTDLP_PATH") ?? @"yt-dlp.exe";
 
 app.MapGet("/", () => {
     InstagramClient client = new InstagramClient(DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN"));
     return client.PostMedia(new InstagramMediaContainer(InstagramMediaType.Image, "https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www", "test https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www"));
 })      
 .WithName("GetUserInfo")
+.WithOpenApi();
+
+app.MapGet("/dowloadreel", async (string reelUrl) =>
+{
+
+    //YtDlpWrapper.YtDlpEngine ytdlp = new YtDlpEngine(@"Tools\yt-dlp.exe");
+    //await ytdlp.DownloadVideoAsync(reelUrl, ".", VideoQuality.Worst);
+})
+.WithName("DownloadReel")
+.WithOpenApi();
+
+app.MapGet("/getvideoinfo", async (string videoURL) =>
+{
+    string appDirectory = AppContext.BaseDirectory;
+
+
+    //YtDlpEngine ytDlpEngine = new YtDlpEngine(ytDlpPath);
+    //var videoInfo = await ytDlpEngine.GetVideoInfoAsync(videoURL);
+    //return videoInfo;
+})
+.WithName("GetVideoInfo")
+.WithOpenApi();
+
+app.MapGet("/getvideoinfotest", async (string videoURL) =>
+{
+    YtDlp ytDlp = new YtDlp(ytDlpPath);
+    return ytDlp.GetVideoInfo(videoURL);
+})
+.WithName("GetVideoInfotest")
 .WithOpenApi();
 
 var summaries = new[]
