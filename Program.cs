@@ -30,7 +30,7 @@ app.MapGet("/", () => {
 .WithName("GetUserInfo")
 .WithOpenApi();
 
-app.MapGet("/dowloadreel", (string reelUrl) =>
+app.MapGet("/dowloadvideo", (string reelUrl) =>
 {
     return ytDlp.DownloadVideo(reelUrl);
 })
