@@ -21,6 +21,7 @@ app.UseHttpsRedirection();
 
 DotNetEnv.Env.Load();   
 string ytDlpPath = DotNetEnv.Env.GetString("YTDLP_PATH") ?? @"yt-dlp.exe";
+YtDlp ytDlp = new YtDlp(ytDlpPath, DotNetEnv.Env.GetString("COOKIES_PATH") ?? "cookies.txt");
 
 app.MapGet("/", () => {
     InstagramClient client = new InstagramClient(DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN"));
@@ -29,11 +30,10 @@ app.MapGet("/", () => {
 .WithName("GetUserInfo")
 .WithOpenApi();
 
-app.MapGet("/dowloadreel", async (string reelUrl) =>
+app.MapGet("/dowloadreel", (string reelUrl) =>
 {
 
-    //YtDlpWrapper.YtDlpEngine ytdlp = new YtDlpEngine(@"Tools\yt-dlp.exe");
-    //await ytdlp.DownloadVideoAsync(reelUrl, ".", VideoQuality.Worst);
+    ytDlp.DownloadVideo(reelUrl);
 })
 .WithName("DownloadReel")
 .WithOpenApi();
