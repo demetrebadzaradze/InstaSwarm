@@ -37,7 +37,7 @@ app.MapGet("/dowloadvideo", (string reelUrl) =>
 .WithName("DownloadReel")
 .WithOpenApi();
 
-app.MapGet("/getvideoinfo", async (string videoURL) =>
+app.MapGet("/getvideoinfo", (string videoURL) =>
 {
     return ytDlp.GetVideoInfo(videoURL);
 })
