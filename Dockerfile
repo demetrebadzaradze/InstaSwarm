@@ -43,4 +43,7 @@ RUN apt-get update && \
 # Switch back to non-root user
 USER app
 
-ENTRYPOINT ["dotnet", "InstaSwarm.dll"]
+RUN mkdir /app/video
+RUN chmod -R 777 /app/video
+VOLUME /app/video 
+ENTRYPOINT ["dotnet", "InstaSwarm.dll"] 
