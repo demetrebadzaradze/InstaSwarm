@@ -32,30 +32,16 @@ app.MapGet("/", () => {
 
 app.MapGet("/dowloadreel", (string reelUrl) =>
 {
-
-    ytDlp.DownloadVideo(reelUrl);
+    return ytDlp.DownloadVideo(reelUrl);
 })
 .WithName("DownloadReel")
 .WithOpenApi();
 
 app.MapGet("/getvideoinfo", async (string videoURL) =>
 {
-    string appDirectory = AppContext.BaseDirectory;
-
-
-    //YtDlpEngine ytDlpEngine = new YtDlpEngine(ytDlpPath);
-    //var videoInfo = await ytDlpEngine.GetVideoInfoAsync(videoURL);
-    //return videoInfo;
-})
-.WithName("GetVideoInfo")
-.WithOpenApi();
-
-app.MapGet("/getvideoinfotest", async (string videoURL) =>
-{
-    YtDlp ytDlp = new YtDlp(ytDlpPath);
     return ytDlp.GetVideoInfo(videoURL);
 })
-.WithName("GetVideoInfotest")
+.WithName("GetVideoInfo")
 .WithOpenApi();
 
 var summaries = new[]
