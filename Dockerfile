@@ -41,9 +41,13 @@ RUN apt-get update && \
     ln -s /usr/local/bin/yt-dlp /app/yt-dlp.exe  # Symlink for potential Windows path compatibility
 
 # Switch back to non-root user
-USER app
 
 RUN mkdir /app/video
 RUN chmod -R 777 /app/video
+RUN chown -R app /app
+
+USER app
+
 VOLUME /app/video 
+
 ENTRYPOINT ["dotnet", "InstaSwarm.dll"] 
