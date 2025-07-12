@@ -16,7 +16,6 @@ namespace InstaSwarm.services
             cookiespath = pathOfCookies;
         }
 
-        //   sudo yt-dlp https://www.instagram.com/reel/DLU_ks_CjSy/  -o "opt/%(title)s.%(ext)s"
         public string DownloadVideo(string videoUrl, string outputDirectory = "video/%(title)s.%(ext)s", string customCookiesPath = "cookies.txt")
         {
             string cookiesArgument = string.IsNullOrEmpty(customCookiesPath) ? $"--cookies \"{CookiesPath}\"" : $"--cookies \"{customCookiesPath}\"";
