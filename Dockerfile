@@ -28,8 +28,10 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Install yt-dlp and dependencies as root
+# Install yt-dlp and dependencies as root.
 USER root
+# Install necessary packages and yt-dlp
+# i think we need python3, pip, curl, ffmpeg but it takes a lot of time to install so we might want to optimize this later
 RUN apt-get update && \
     apt-get install -y --no-install-recommends python3 python3-pip curl ffmpeg && \
     curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
@@ -43,7 +45,13 @@ RUN apt-get update && \
 # Switch back to non-root user
 USER app
 
+# Set the working directory and ensure the video directory exists
 RUN mkdir /app/video
 RUN chmod -R 777 /app/video
 VOLUME /app/video 
+
+# Copy the HTTPS certificate file into the container
+COPY https-dev.pfx /app/https-dev.pfx
+
+
 ENTRYPOINT ["dotnet", "InstaSwarm.dll"] 
