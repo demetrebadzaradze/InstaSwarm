@@ -1,5 +1,7 @@
 using InstaSwarm.services;
+using Microsoft.AspNetCore.Mvc;
 using System.Runtime.Intrinsics.Arm;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +9,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080); // HTTP
+    options.ListenAnyIP(8081, listenOptions =>
+    {
+        listenOptions.UseHttps("https-dev.pfx", "Demetre888"); // Enable HTTPS
+    });
+});
 
 var app = builder.Build();
 
@@ -19,20 +30,21 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-DotNetEnv.Env.Load();   
+DotNetEnv.Env.Load();
 string ytDlpPath = DotNetEnv.Env.GetString("YTDLP_PATH") ?? @"yt-dlp.exe";
 YtDlp ytDlp = new YtDlp(ytDlpPath, DotNetEnv.Env.GetString("COOKIES_PATH") ?? "cookies.txt");
 
-app.MapGet("/", () => {
+app.MapGet("/", () =>
+{
     InstagramClient client = new InstagramClient(DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN"));
     return client.PostMedia(new InstagramMediaContainer(InstagramMediaType.Image, "https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www", "test https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www"));
-})      
+})
 .WithName("GetUserInfo")
 .WithOpenApi();
 
-app.MapGet("/dowloadvideo", (string reelUrl) =>
+app.MapGet("/dowloadvideo", (string videoURL) =>
 {
-    return ytDlp.DownloadVideo(reelUrl);
+    return ytDlp.DownloadVideo(videoURL);
 })
 .WithName("DownloadReel")
 .WithOpenApi();
@@ -43,5 +55,55 @@ app.MapGet("/getvideoinfo", (string videoURL) =>
 })
 .WithName("GetVideoInfo")
 .WithOpenApi();
+
+app.MapGet("webhook/test", async () =>
+{
+    //var content = await context.ReadAsStringAsync();
+    //var token = context.Query["hub.verify_token"];
+    //var challenge = context.Query["hub.challenge"];
+    await Task.Delay(10); // Simulate some processing delay   
+    Console.WriteLine($"Received content: ");
+})
+.WithName("webhook_test")
+.WithOpenApi();
+
+//app.MapPost("/webhook/instagram", () =>
+//{
+    //try
+    //{
+    //    using var reader = new StreamReader(HttpRequest.Body);
+    //    string json = await reader.ReadToEndAsync();
+    //    var payload = JsonSerializer.Deserialize<InstagramWebhookPayload>(json);
+
+    //    if (payload?.Object == "instagram")
+    //    {
+    //        foreach (var entry in payload.Entry)
+    //        {
+    //            foreach (var messaging in entry.Messaging)
+    //            {
+    //                string senderId = messaging.Sender.Id;
+    //                string messageId = messaging.Message.Mid;
+    //                string messageText = messaging.Message.Text;
+
+    //                if (!string.IsNullOrEmpty(messageText))
+    //                {
+    //                    _logger.LogInformation("Received DM from {SenderId}: {MessageText}", senderId, messageText);
+    //                    await _instagramAgent.ProcessVideoLinkAsync(senderId, messageText, messageId);
+    //                }
+    //            }
+    //        }
+    //        return Ok("EVENT_RECEIVED");
+    //    }
+
+    //    return NotFound();
+    //}
+    //catch (Exception ex)
+    //{
+    //    _logger.LogError(ex, "Error processing webhook payload.");
+    //    return StatusCode(500);
+    //}
+//})
+//.WithName("webhook_instagram")
+//.WithOpenApi();
 
 app.Run();

@@ -38,7 +38,7 @@
       },
       "publishAllPorts": true,
       "useSSL": true,
-      "DockerfileRunArguments": "-v C:/Users/Deme/Pictures/shared:/app/video"
+      "DockerfileRunArguments": "-v C:/Users/Deme/Pictures/shared:/app/video -p 5000:8080 -p 5001:8081"
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
