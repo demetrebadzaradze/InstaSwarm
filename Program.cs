@@ -90,7 +90,7 @@ app.MapGet("/postvideo", (string videoURL, string caption) =>
         new InstagramMediaContainer(
             InstagramMediaType.REELS,
             videoURL,
-            caption));
+            caption),100);
 })
 .WithName("PostVideo")
 .WithOpenApi();
