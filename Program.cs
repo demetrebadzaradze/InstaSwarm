@@ -76,7 +76,7 @@ app.MapGet("/download-and-upload", async (string videoURL, string caption) =>
     string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
     string baseurl = "https://tg3w3p.taile6d42d.ts.net/";
     string videoPath = ytDlp.DownloadVideo(videoURL).Replace("video/", "");
-    string EncodedvideoPath = Uri.EscapeDataString(videoPath);
+    string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"",""));
     InstagramClient client = new InstagramClient(secret);
     return await client.PostMedia(
         new InstagramMediaContainer(
