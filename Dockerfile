@@ -7,6 +7,32 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
+# Install yt-dlp and dependencies as root.
+USER root
+# Install necessary packages and yt-dlp
+# i think we need python3, pip, curl, ffmpeg but it takes a lot of time to install so we might want to optimize this later
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3 python3-pip curl ffmpeg && \
+    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
+    chmod +x /usr/local/bin/yt-dlp && \
+    /usr/local/bin/yt-dlp --version && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    chown app:app /usr/local/bin/yt-dlp && \
+    ln -s /usr/local/bin/yt-dlp /app/yt-dlp.exe  # Symlink for potential Windows path compatibility
+
+# Set the working directory and ensure the video directory exists
+RUN mkdir /app/video
+RUN chmod -R 777 /app/video
+RUN chown -R app /app
+
+USER app
+
+VOLUME /app/video 
+
+# Copy the HTTPS certificate file into the container
+COPY https-dev.pfx /app/https-dev.pfx
+
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -27,34 +53,5 @@ RUN dotnet publish "./InstaSwarm.csproj" -c $BUILD_CONFIGURATION -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-
-# Install yt-dlp and dependencies as root.
-USER root
-# Install necessary packages and yt-dlp
-# i think we need python3, pip, curl, ffmpeg but it takes a lot of time to install so we might want to optimize this later
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 python3-pip curl ffmpeg && \
-    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
-    chmod +x /usr/local/bin/yt-dlp && \
-    /usr/local/bin/yt-dlp --version && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    chown app:app /usr/local/bin/yt-dlp && \
-    ln -s /usr/local/bin/yt-dlp /app/yt-dlp.exe  # Symlink for potential Windows path compatibility
-
-# Switch back to non-root user
-
-# Set the working directory and ensure the video directory exists
-RUN mkdir /app/video
-RUN chmod -R 777 /app/video
-RUN chown -R app /app
-
-USER app
-
-VOLUME /app/video 
-
-# Copy the HTTPS certificate file into the container
-COPY https-dev.pfx /app/https-dev.pfx
-
 
 ENTRYPOINT ["dotnet", "InstaSwarm.dll"] 
