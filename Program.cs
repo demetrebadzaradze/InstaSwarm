@@ -36,8 +36,13 @@ YtDlp ytDlp = new YtDlp(ytDlpPath, DotNetEnv.Env.GetString("COOKIES_PATH") ?? "c
 
 app.MapGet("/", () =>
 {
-    InstagramClient client = new InstagramClient(DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN"));
-    return client.PostMedia(new InstagramMediaContainer(InstagramMediaType.Image, "https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www", "test https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www"));
+    string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
+    InstagramClient client = new InstagramClient(secret);
+    return client.PostMedia(
+        new InstagramMediaContainer(
+            InstagramMediaType.Image,
+            "https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www",
+            "test https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www"));
 })
 .WithName("GetUserInfo")
 .WithOpenApi();
@@ -69,39 +74,39 @@ app.MapGet("webhook/test", async () =>
 
 //app.MapPost("/webhook/instagram", () =>
 //{
-    //try
-    //{
-    //    using var reader = new StreamReader(HttpRequest.Body);
-    //    string json = await reader.ReadToEndAsync();
-    //    var payload = JsonSerializer.Deserialize<InstagramWebhookPayload>(json);
+//try
+//{
+//    using var reader = new StreamReader(HttpRequest.Body);
+//    string json = await reader.ReadToEndAsync();
+//    var payload = JsonSerializer.Deserialize<InstagramWebhookPayload>(json);
 
-    //    if (payload?.Object == "instagram")
-    //    {
-    //        foreach (var entry in payload.Entry)
-    //        {
-    //            foreach (var messaging in entry.Messaging)
-    //            {
-    //                string senderId = messaging.Sender.Id;
-    //                string messageId = messaging.Message.Mid;
-    //                string messageText = messaging.Message.Text;
+//    if (payload?.Object == "instagram")
+//    {
+//        foreach (var entry in payload.Entry)
+//        {
+//            foreach (var messaging in entry.Messaging)
+//            {
+//                string senderId = messaging.Sender.Id;
+//                string messageId = messaging.Message.Mid;
+//                string messageText = messaging.Message.Text;
 
-    //                if (!string.IsNullOrEmpty(messageText))
-    //                {
-    //                    _logger.LogInformation("Received DM from {SenderId}: {MessageText}", senderId, messageText);
-    //                    await _instagramAgent.ProcessVideoLinkAsync(senderId, messageText, messageId);
-    //                }
-    //            }
-    //        }
-    //        return Ok("EVENT_RECEIVED");
-    //    }
+//                if (!string.IsNullOrEmpty(messageText))
+//                {
+//                    _logger.LogInformation("Received DM from {SenderId}: {MessageText}", senderId, messageText);
+//                    await _instagramAgent.ProcessVideoLinkAsync(senderId, messageText, messageId);
+//                }
+//            }
+//        }
+//        return Ok("EVENT_RECEIVED");
+//    }
 
-    //    return NotFound();
-    //}
-    //catch (Exception ex)
-    //{
-    //    _logger.LogError(ex, "Error processing webhook payload.");
-    //    return StatusCode(500);
-    //}
+//    return NotFound();
+//}
+//catch (Exception ex)
+//{
+//    _logger.LogError(ex, "Error processing webhook payload.");
+//    return StatusCode(500);
+//}
 //})
 //.WithName("webhook_instagram")
 //.WithOpenApi();
