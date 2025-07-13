@@ -31,7 +31,11 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 DotNetEnv.Env.Load();
-string ytDlpPath = DotNetEnv.Env.GetString("YTDLP_PATH") ?? @"yt-dlp.exe";
+string ytDlpPath = DotNetEnv.Env.GetString("YTDLP_PATH");
+if (String.IsNullOrEmpty(ytDlpPath))
+{
+       ytDlpPath = "yt-dlp.exe"; // Default path if not set in environment variables
+}
 YtDlp ytDlp = new YtDlp(ytDlpPath, DotNetEnv.Env.GetString("COOKIES_PATH") ?? "cookies.txt");
 
 app.MapGet("/", () =>
