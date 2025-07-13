@@ -161,18 +161,11 @@ namespace InstaSwarm.services
                 return LatestInstagramMediaContainer.Id;
             }
         }
-        //public async Task<string> DownloadReel(string reelUrl, string downloadPath = "./video")
-        //{
-        //    string 
-        //    YtDlpWrapper.YtDlpEngine ytdlp = new YtDlpWrapper.YtDlpEngine();
-        //    try
-        //    {
-        //        await ytdlp.DownloadVideoAsync(reelUrl, downloadPath, YtDlpWrapper.VideoQuality.Worst);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"An error occurred while downloading the reel: {ex.Message}");
-        //    }
-        //}
+        // to implement later:
+        // GET https://graph.instagram.com/refresh_access_token
+        //  ?grant_type=ig_refresh_token
+        //  &access_token=<LONG_LIVED_ACCESS_TOKENS>
+        // refresh access token 
+        // folow this link for more info: https://developers.facebook.com/docs/instagram-platform/reference/refresh_access_token/
     }
 }
