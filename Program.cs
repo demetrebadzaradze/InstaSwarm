@@ -58,6 +58,19 @@ app.MapGet("/dowloadvideo", (string videoURL) =>
 .WithName("DownloadReel")
 .WithOpenApi();
 
+app.MapGet("/postvideo", (string videoURL, string caption) =>
+{
+    string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
+    InstagramClient client = new InstagramClient(secret);
+    return client.PostMedia(
+        new InstagramMediaContainer(
+            InstagramMediaType.REELS,
+            videoURL,
+            caption));
+})
+.WithName("PostVideo")
+.WithOpenApi();
+
 app.MapGet("/getvideoinfo", (string videoURL) =>
 {
     return ytDlp.GetVideoInfo(videoURL);
