@@ -156,7 +156,7 @@ namespace InstaSwarm.services
             {
                 Console.WriteLine($"An error occurred while waiting: {ex.Message}");
                 Console.WriteLine("trying aggain with another 15 sec delay");
-                await Task.Delay(1 * 1000 * delayBeforePublishingInSeconds); // Wait for 15 seconds before publishing
+                await Task.Delay(1 * 1000 * delayBeforePublishingInSeconds * 2a); // Wait for 15 seconds before publishing
                 await PublishMediaContainer();
                 return LatestInstagramMediaContainer.Id;
             }
