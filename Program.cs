@@ -71,6 +71,22 @@ app.MapGet("/postvideo", (string videoURL, string caption) =>
 .WithName("PostVideo")
 .WithOpenApi();
 
+app.MapGet("/download-and-upload", async (string videoURL, string caption) =>
+{
+    string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
+    string baseurl = "https://tg3w3p.taile6d42d.ts.net/";
+    string videoPath = ytDlp.DownloadVideo(videoURL).Replace("video/", "");
+    string EncodedvideoPath = Uri.EscapeDataString(videoPath);
+    InstagramClient client = new InstagramClient(secret);
+    return await client.PostMedia(
+        new InstagramMediaContainer(
+            InstagramMediaType.REELS,
+            $"{baseurl}{EncodedvideoPath}",
+            caption),100);
+})
+.WithName("DownloadAndUploadVideo")
+.WithOpenApi();
+
 app.MapGet("/getvideoinfo", (string videoURL) =>
 {
     return ytDlp.GetVideoInfo(videoURL);
