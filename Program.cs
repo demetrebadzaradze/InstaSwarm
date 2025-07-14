@@ -10,12 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+DotNetEnv.Env.Load();
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(8080); // HTTP
     options.ListenAnyIP(8081, listenOptions =>
     {
-        listenOptions.UseHttps("https-dev.pfx", "Demetre888"); // Enable HTTPS
+        listenOptions.UseHttps("https-dev.pfx", DotNetEnv.Env.GetString("HTTPS_CERT_PASSWORD")); // Enable HTTPS
     });
 });
 
@@ -30,7 +32,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-DotNetEnv.Env.Load();
 string ytDlpPath = DotNetEnv.Env.GetString("YTDLP_PATH");
 if (String.IsNullOrEmpty(ytDlpPath))
 {
@@ -74,7 +75,7 @@ app.MapGet("/postvideo", (string videoURL, string caption) =>
 app.MapGet("/download-and-upload", async (string videoURL, string caption) =>
 {
     string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
-    string baseurl = "https://tg3w3p.taile6d42d.ts.net/";
+    string baseurl = DotNetEnv.Env.GetString("PUBLIC_BASE_URL");       
     string videoPath = ytDlp.DownloadVideo(videoURL).Replace("video/", "");
     string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"",""));
     InstagramClient client = new InstagramClient(secret);
