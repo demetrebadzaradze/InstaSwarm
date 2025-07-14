@@ -167,5 +167,41 @@ namespace InstaSwarm.services
         //  &access_token=<LONG_LIVED_ACCESS_TOKENS>
         // refresh access token 
         // folow this link for more info: https://developers.facebook.com/docs/instagram-platform/reference/refresh_access_token/
+        public async Task<string> RefreshAccessToken(string? longLivedAccessToken = "")
+        {
+            if (string.IsNullOrEmpty(longLivedAccessToken))
+            {
+                longLivedAccessToken = _userKey;
+                Console.WriteLine("Long-lived access token is required.");
+            }
+
+            string url = $"https://{IG_API_baseUrl}/refresh_access_token?grant_type=ig_refresh_token&access_token={longLivedAccessToken}";
+            try
+            {
+                HttpResponseMessage response = await httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    JsonDocument jsonDocument = JsonDocument.Parse(responseBody);
+                    Console.WriteLine("Access token refreshed successfully.");
+                    Console.WriteLine(jsonDocument.RootElement.ToString());
+                    _userKey = jsonDocument.RootElement.GetProperty("access_token").GetString()!;
+                    Environment.SetEnvironmentVariable("INSTAGRAM_USER_TOKEN", _userKey);
+                    DotNetEnv.Env.Load();
+                    Console.WriteLine(DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN"));
+                    return jsonDocument.RootElement.GetProperty("expires_in").GetInt32().ToString();
+                }
+                else
+                {
+                    Console.WriteLine($"Error: {response.StatusCode}");
+                    return string.Empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return string.Empty;
+            }
+        }
     }
 }

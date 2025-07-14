@@ -43,13 +43,9 @@ app.MapGet("/", () =>
 {
     string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
     InstagramClient client = new InstagramClient(secret);
-    return client.PostMedia(
-        new InstagramMediaContainer(
-            InstagramMediaType.Image,
-            "https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www",
-            "test https://urlme.me/success/typed_a_url/made_a_meme.jpg?source=www"));
+    return client.RefreshAccessToken();
 })
-.WithName("GetUserInfo")
+.WithName("RefreshAccessToken")
 .WithOpenApi();
 
 app.MapGet("/dowloadvideo", (string videoURL) =>
