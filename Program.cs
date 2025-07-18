@@ -1,7 +1,10 @@
 using InstaSwarm.services;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using System.Runtime.Intrinsics.Arm;
 using System.Text.Json;
+using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
 

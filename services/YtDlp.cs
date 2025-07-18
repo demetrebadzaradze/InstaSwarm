@@ -41,13 +41,28 @@ namespace InstaSwarm.services
                 StringBuilder output = new();
                 StringBuilder error = new();
 
-                process.OutputDataReceived += (sender, e) =>
+                process.OutputDataReceived += (sender, e) =>        //  kinda junky, will fix it later
                 {
                     if (e.Data == null) return;
                     if (e.Data != null) output.AppendLine(e.Data);
-                    if (e.Data.StartsWith("[Merger] Merging formats into ")) 
+                    if (e.Data.StartsWith("[Merger] Merging formats into "))    //  this kinda got deleted, but I will keep it for now
                     {
-                        destination = e.Data.Substring("[Merger] Merging formats into ".Length).Trim();
+                        
+                            destination = e.Data.Substring("[Merger] Merging formats into ".Length).Trim();
+                    }
+                    //  [download] Destination: video / Video by ittybittythinggs.mp4
+                    if (e.Data.StartsWith("[download] Destination: "))
+                    {
+                        Console.WriteLine(e.Data);
+                        destination = e.Data.Substring("[download] Destination: ".Length).Trim();
+                        Console.WriteLine(destination);
+                    }
+                    //  [download] video / Video by ittybittythinggs.mp4 has already been downloaded
+                    else if (e.Data.StartsWith("[download] ") && e.Data.Contains(" has already been downloaded"))
+                    {
+                        Console.WriteLine(e.Data);
+                        destination = e.Data.Substring("[download] ".Length, e.Data.IndexOf(" has already been downloaded") - "[download] ".Length).Trim();
+                        Console.WriteLine(destination);
                     }
                 };
                 process.ErrorDataReceived += (sender, e) => { if (e.Data != null) error.AppendLine(e.Data); };
