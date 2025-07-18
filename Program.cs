@@ -75,11 +75,14 @@ app.MapGet("/download-and-upload", async (string videoURL, string caption) =>
     string videoPath = ytDlp.DownloadVideo(videoURL).Replace("video/", "");
     string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"",""));
     InstagramClient client = new InstagramClient(secret);
-    return await client.PostMedia(
+    string localVideoURL = $"{baseurl}{EncodedvideoPath}";
+    string containerId = await client.PostMedia(
         new InstagramMediaContainer(
             InstagramMediaType.REELS,
-            $"{baseurl}{EncodedvideoPath}",
-            caption),100);
+            localVideoURL,
+            caption),
+        100);
+    return $"Video uploaded successfully with ID: {containerId} \nlink: https://www.instagram.com/{client.User.Username}/ \nCurl ed file from {localVideoURL}";
 })
 .WithName("DownloadAndUploadVideo")
 .WithOpenApi();
