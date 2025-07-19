@@ -44,9 +44,9 @@ YtDlp ytDlp = new YtDlp(ytDlpPath, DotNetEnv.Env.GetString("COOKIES_PATH") ?? "c
 
 app.MapGet("/", () =>
 {
-    string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
-    InstagramClient client = new InstagramClient(secret);
-    return client.RefreshAccessToken();
+    //string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
+    //InstagramClient client = new InstagramClient(secret);
+    //return client.RefreshAccessToken();
 })
 .WithName("RefreshAccessToken")
 .WithOpenApi();
@@ -97,16 +97,26 @@ app.MapGet("/getvideoinfo", (string videoURL) =>
 .WithName("GetVideoInfo")
 .WithOpenApi();
 
-app.MapGet("webhook/test", async () =>
+app.MapGet("/webhook/instagram", (
+    [FromQuery(Name = "hub.mode")] string? mode,
+    [FromQuery(Name = "hub.verify_token")] string? verifyToken,
+    [FromQuery(Name = "hub.challenge")] string? challenge) =>
 {
-    //var content = await context.ReadAsStringAsync();
-    //var token = context.Query["hub.verify_token"];
-    //var challenge = context.Query["hub.challenge"];
-    await Task.Delay(10); // Simulate some processing delay   
-    Console.WriteLine($"Received content: ");
+    if (mode == "subscribe" && verifyToken == "VERIFY_TOKEN")
+    {
+        return Results.Text(challenge ?? string.Empty, contentType: "text/plain");
+    }
+    return Results.StatusCode(403);
 })
-.WithName("webhook_test")
-.WithOpenApi();
+.WithName("InstagramWebhookVerification")
+.WithOpenApi(o =>
+{
+    o.Description = "Instagram Webhook Verification Endpoint";
+    o.Parameters[0].Description = "Webhook mode (should be 'subscribe')";
+    o.Parameters[1].Description = "Verification token to validate the webhook";
+    o.Parameters[2].Description = "Challenge string to return for verification";
+    return o;
+});
 
 //app.MapPost("/webhook/instagram", () =>
 //{
