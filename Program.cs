@@ -118,43 +118,28 @@ app.MapGet("/webhook/instagram", (
     return o;
 });
 
-//app.MapPost("/webhook/instagram", () =>
-//{
-//try
-//{
-//    using var reader = new StreamReader(HttpRequest.Body);
-//    string json = await reader.ReadToEndAsync();
-//    var payload = JsonSerializer.Deserialize<InstagramWebhookPayload>(json);
+app.MapPost("/webhook/instagram", async (HttpRequest request) =>
+{
+    try
+    {
+        using var reader = new StreamReader(request.Body);
+        var body = await reader.ReadToEndAsync();
+        var payload = JsonSerializer.Deserialize<InstagramWebhookPayload>(body);
 
-//    if (payload?.Object == "instagram")
-//    {
-//        foreach (var entry in payload.Entry)
-//        {
-//            foreach (var messaging in entry.Messaging)
-//            {
-//                string senderId = messaging.Sender.Id;
-//                string messageId = messaging.Message.Mid;
-//                string messageText = messaging.Message.Text;
+        Console.WriteLine($"webhook secived\n{payload}");
 
-//                if (!string.IsNullOrEmpty(messageText))
-//                {
-//                    _logger.LogInformation("Received DM from {SenderId}: {MessageText}", senderId, messageText);
-//                    await _instagramAgent.ProcessVideoLinkAsync(senderId, messageText, messageId);
-//                }
-//            }
-//        }
-//        return Ok("EVENT_RECEIVED");
-//    }
-
-//    return NotFound();
-//}
-//catch (Exception ex)
-//{
-//    _logger.LogError(ex, "Error processing webhook payload.");
-//    return StatusCode(500);
-//}
-//})
-//.WithName("webhook_instagram")
-//.WithOpenApi();
+        return Results.Ok("Webhook received");
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest($"Error processing webhook: {ex.Message}");
+    }
+})
+.WithName("InstagramWebhookData")
+.WithOpenApi(o =>
+{
+    o.Description = "Instagram Webhook Data Endpoint";
+    return o;
+});
 
 app.Run();
