@@ -125,8 +125,10 @@ app.MapPost("/webhook/instagram", async (HttpRequest request) =>
         using var reader = new StreamReader(request.Body);
         var body = await reader.ReadToEndAsync();
         var payload = JsonSerializer.Deserialize<InstagramWebhookPayload>(body);
+        var custumPayload = JsonSerializer.Deserialize<InstagramWebhook>(body);
 
         Console.WriteLine($"webhook secived\n{payload}");
+        Console.WriteLine($"webhook secived with Deserialization with my class\n{custumPayload}\nand mesige : {custumPayload.Value.Message}");
 
         return Results.Ok("Webhook received");
     }
