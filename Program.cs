@@ -118,17 +118,13 @@ app.MapGet("/webhook/instagram", (
     return o;
 });
 
-app.MapPost("/webhook/instagram", async (HttpRequest request) =>
+app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>
 {
     try
     {
-        using var reader = new StreamReader(request.Body);
-        var body = await reader.ReadToEndAsync();
-        var payload = JsonSerializer.Deserialize<InstagramWebhookPayload>(body);
-        var custumPayload = JsonSerializer.Deserialize<InstagramWebhook>(body);
-
-        Console.WriteLine($"webhook secived\n{payload}");
-        Console.WriteLine($"webhook secived with Deserialization with my class\n{custumPayload}\nand mesige : {custumPayload.Value.Message}");
+        await Task.Delay(1); // Simulate some processing delay
+        Console.WriteLine($"webhook secived\n{webhook}");
+        Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {webhook.Value.Message.Text}");
 
         return Results.Ok("Webhook received");
     }
@@ -138,6 +134,27 @@ app.MapPost("/webhook/instagram", async (HttpRequest request) =>
     }
 })
 .WithName("InstagramWebhookData")
+.WithOpenApi(o =>
+{
+    o.Description = "Instagram Webhook Data Endpoint";
+    return o;
+});
+app.MapPost("/webhook/instagram-test", async (InstagramWebhook webhook) =>
+{
+    try
+    {
+        await Task.Delay(1); // Simulate some processing delay
+        Console.WriteLine($"webhook secived\n{webhook}");
+        Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {webhook.Value.Message.Text}");
+
+        return Results.Ok("Webhook received");
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest($"Error processing webhook: {ex.Message}");
+    }
+})
+.WithName("InstagramWebhookTest")
 .WithOpenApi(o =>
 {
     o.Description = "Instagram Webhook Data Endpoint";
