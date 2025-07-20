@@ -119,28 +119,23 @@ app.MapGet("/webhook/instagram", (
     return o;
 });
 
-app.MapPost("/webhook/instagram", async (HttpContext context /*InstagramWebhook webhook*/) =>
+app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>
 {
-    using var streamReader = new StreamReader(context.Request.Body);
-    var payload = await streamReader.ReadToEndAsync();
+    try
+    {
+        await Task.Delay(1); // Simulate some processing delay
+        webhook.ListPropertiesInTerminal();
+        Console.WriteLine($"webhook secived\n{webhook}");
+        Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {webhook.Entry[0].Messaging[0].Message.Text}");
 
-    Console.WriteLine("Received Instagram Webhook Payload:");
-    Console.WriteLine(payload);
 
-    return Results.Ok(new { message = payload });
-
-    //try
-    //{
-    //    await Task.Delay(1); // Simulate some processing delay
-    //    Console.WriteLine($"webhook secived\n{webhook}");
-    //    Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {webhook.Value.Message.Text}");
-
-    //    return Results.Ok("Webhook received");
-    //}
-    //catch (Exception ex)
-    //{
-    //    return Results.BadRequest($"Error processing webhook: {ex.Message}");
-    //}
+        return Results.Ok("Webhook received");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("error: " + ex.Message);
+        return Results.BadRequest($"Error processing webhook: {ex.Message}");
+    }
 })
 .WithName("InstagramWebhookData")
 .WithOpenApi(o =>
@@ -154,7 +149,7 @@ app.MapPost("/webhook/instagram-test", async (InstagramWebhook webhook) =>
     {
         await Task.Delay(1); // Simulate some processing delay
         Console.WriteLine($"webhook secived\n{webhook}");
-        Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {webhook.Value.Message.Text}");
+        Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {webhook.Entry[0].Messaging[0].Message.Text}");
 
         return Results.Ok("Webhook received");
     }
