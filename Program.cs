@@ -102,7 +102,8 @@ app.MapGet("/webhook/instagram", (
     [FromQuery(Name = "hub.verify_token")] string? verifyToken,
     [FromQuery(Name = "hub.challenge")] string? challenge) =>
 {
-    if (mode == "subscribe" && verifyToken == "VERIFY_TOKEN")
+    string tokenForVerifingWebhook = DotNetEnv.Env.GetString("WEBHOOKK_VERIFY_TOKEN");
+    if (mode == "subscribe" && verifyToken == tokenForVerifingWebhook)
     {
         return Results.Text(challenge ?? string.Empty, contentType: "text/plain");
     }
