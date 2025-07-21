@@ -35,10 +35,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Initialize InstagramAgent with tokens from environment variables
+InstagramAgent IGagent = new InstagramAgent(
+    DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKENS")?.Split(',') ?? Array.Empty<string>());
+
+// Initialize YtDlp with the path from environment variables or default to "yt-dlp.exe"s
 string ytDlpPath = DotNetEnv.Env.GetString("YTDLP_PATH");
 if (String.IsNullOrEmpty(ytDlpPath))
 {
-       ytDlpPath = "yt-dlp.exe"; // Default path if not set in environment variables
+    ytDlpPath = "yt-dlp.exe"; // Default path if not set in environment variables
 }
 YtDlp ytDlp = new YtDlp(ytDlpPath, DotNetEnv.Env.GetString("COOKIES_PATH") ?? "cookies.txt");
 
@@ -74,9 +79,9 @@ app.MapGet("/postvideo", (string videoURL, string caption) =>
 app.MapGet("/download-and-upload", async (string videoURL, string caption) =>
 {
     string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
-    string baseurl = DotNetEnv.Env.GetString("PUBLIC_BASE_URL");       
+    string baseurl = DotNetEnv.Env.GetString("PUBLIC_BASE_URL");
     string videoPath = ytDlp.DownloadVideo(videoURL).Replace("video/", "");
-    string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"",""));
+    string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"", ""));
     InstagramClient client = new InstagramClient(secret);
     string localVideoURL = $"{baseurl}{EncodedvideoPath}";
     string containerId = await client.PostMedia(
@@ -126,7 +131,20 @@ app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>
         await Task.Delay(1); // Simulate some processing delay
         webhook.ListPropertiesInTerminal();
         Console.WriteLine($"webhook secived\n{webhook}");
-        Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {webhook.Entry[0].Messaging[0].Message.Text}");
+
+        try
+        {
+            string messageText = webhook.Entry[0].Messaging[0].Message.Text;
+            Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {messageText}");
+            InstagramUser user = await IGagent.Clients[0].InitializeUserInfo(UserID: webhook.Entry[0].Messaging[0].Sender.Id,creatorOnlyPropsToget: "");
+            Console.WriteLine($"message from: {user.Username} | {user.Name}");
+            Console.WriteLine($"Link in the message: {IGagent.ExtractVideoLinkFromMessage(messageText)}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error accessing Messaging or Message: " + ex.Message + "\nbut changes should be here:");
+            Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {webhook.Entry[0].Changes[0].Value.Message.Text}");
+        }
 
 
         return Results.Ok("Webhook received");

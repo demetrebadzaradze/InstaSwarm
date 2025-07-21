@@ -7,21 +7,21 @@ namespace InstaSwarm.services
         [JsonPropertyName("id")]
         public string ID { get; set; }
         [JsonPropertyName("user_id")]
-        public string UserID { get; set; }
+        public string? UserID { get; set; }
         [JsonPropertyName("username")]
         public string Username { get; set; }
         [JsonPropertyName("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
         [JsonPropertyName("profile_picture_url")]
-        public string ProfilePictureUrl { get; set; }
+        public string? ProfilePictureUrl { get; set; }
         [JsonPropertyName("account_type")]
-        public string AccountType { get; set; }
+        public string? AccountType { get; set; }
         [JsonPropertyName("followers_count")]
-        public int FollowersCount { get; set; }
+        public int? FollowersCount { get; set; }
         [JsonPropertyName("follows_count")]
-        public int FollowsCount { get; set; }
+        public int? FollowsCount { get; set; }
         [JsonPropertyName("media_count")]
-        public int MediaCount { get; set; }
+        public int? MediaCount { get; set; }
 
         public static readonly InstagramUser Error = new InstagramUser()
         {

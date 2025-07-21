@@ -22,10 +22,10 @@ namespace InstaSwarm.services
             httpClient.DefaultRequestHeaders.Clear();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _userKey);
         }
-        public async Task<InstagramUser> InitializeUserInfo(string? token = null, string? UserID = "me")
+        public async Task<InstagramUser> InitializeUserInfo(string? token = null, string? UserID = "me",string? creatorOnlyPropsToget = ",user_id,account_type,profile_picture_url,followers_count,follows_count,media_count")
         {
             _userKey = token ?? _userKey;
-            string url = $"https://{IG_API_baseUrl}/{IG_API_Version}/{UserID}?fields=user_id,username,id,account_type,profile_picture_url,followers_count,follows_count,media_count&access_token={_userKey}";
+            string url = $"https://{IG_API_baseUrl}/{IG_API_Version}/{UserID}?fields=id,username{creatorOnlyPropsToget}&access_token={_userKey}";
             try
             {
                 HttpResponseMessage ResponseMessage = await httpClient.GetAsync(url);
