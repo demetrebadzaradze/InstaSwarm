@@ -22,10 +22,10 @@ namespace InstaSwarm.services
             httpClient.DefaultRequestHeaders.Clear();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _userKey);
         }
-        public async Task<InstagramUser> InitializeUserInfo(string? token = null)
+        public async Task<InstagramUser> InitializeUserInfo(string? token = null, string? UserID = "me")
         {
             _userKey = token ?? _userKey;
-            string url = $"https://{IG_API_baseUrl}/{IG_API_Version}/me?fields=user_id,username,id,account_type,profile_picture_url,followers_count,follows_count,media_count&access_token={_userKey}";
+            string url = $"https://{IG_API_baseUrl}/{IG_API_Version}/{UserID}?fields=user_id,username,id,account_type,profile_picture_url,followers_count,follows_count,media_count&access_token={_userKey}";
             try
             {
                 HttpResponseMessage ResponseMessage = await httpClient.GetAsync(url);
@@ -40,7 +40,7 @@ namespace InstaSwarm.services
                 }
                 else
                 {
-                    Console.WriteLine($"Error: {ResponseMessage.StatusCode}");
+                    Console.WriteLine($"Error: {ResponseMessage.StatusCode}" + "\nHINT: Probably token is invalid");
                     return InstagramUser.Error;
                 }
 
