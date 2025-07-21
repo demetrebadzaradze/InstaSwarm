@@ -112,7 +112,7 @@ namespace InstaSwarm.services
             }
             return "";
         }
-        public bool IsValidVideoLink(string videoLink, out string cleanLink)
+        public bool IsValidVideoLink(string videoLink, out string cleanLink )
         {
             if (string.IsNullOrEmpty(videoLink))
             {
