@@ -1,4 +1,6 @@
-﻿public class InstagramWebhook
+﻿using InstaSwarm.services;
+
+public class InstagramWebhook
 {
     public string Object { get; set; }
     public List<Entry> Entry { get; set; }
@@ -37,6 +39,13 @@ public class Entry
     public List<Messaging>? Messaging { get; set; }
     public List<Change>? Changes { get; set; }
 }
+public class Messaging
+{
+    public User Sender { get; set; }
+    public User Recipient { get; set; }
+    public long Timestamp { get; set; }
+    public Message Message { get; set; }
+}
 
 public class Change
 {
@@ -60,13 +69,17 @@ public class User
 public class Message
 {
     public string Mid { get; set; }
-    public string Text { get; set; }
+    public string? Text { get; set; }
+    public List<Attachment>? Attachments { get; set; }
 }
-
-public class Messaging
+public class Attachment
 {
-    public User Sender { get; set; }
-    public User Recipient { get; set; }
-    public long Timestamp { get; set; }
-    public Message Message { get; set; }
+    public string Type { get; set; }
+    public Payload Payload { get; set; }
+}
+public class Payload
+{
+    public string? ReelVideoId { get; set; }
+    public string Title { get; set; }
+    public string Url { get; set; }
 }
