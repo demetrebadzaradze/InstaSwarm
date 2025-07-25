@@ -2,11 +2,15 @@ using InstaSwarm.services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Net.WebSockets;
 using System.Runtime.Intrinsics.Arm;
 using System.Text.Json;
 using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.ConfigureHttpJsonOptions(opts =>
+    opts.SerializerOptions.PropertyNameCaseInsensitive = true);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -124,31 +128,117 @@ app.MapGet("/webhook/instagram", (
     return o;
 });
 
-app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>
+// go back to the raw htpsrequest as the parameter for the webhook and figure out what is going on when reel is sent from phone and make it work
+// https://grok.com/chat/464da0bc-b661-4d60-9da1-99be87f2ef95
+app.MapPost("/webhook/instagram", async (HttpContext context) =>   // use HttpContext fro debuging and better understanding of the request
 {
     try
     {
-        await Task.Delay(1); // Simulate some processing delay
+        context.Request.EnableBuffering();
+
+        // Read raw JSON
+        using var reader = new StreamReader(
+            context.Request.Body,
+            encoding: System.Text.Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: false,
+            leaveOpen: true);
+        string jsonPayload = await reader.ReadToEndAsync();
+
+        // Log raw JSON
+        Console.WriteLine("Raw JSON Payload Received:");
+        Console.WriteLine(jsonPayload);
+
+        // Reset body position for further reading if needed
+        context.Request.Body.Position = 0;
+
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var webhook = JsonSerializer.Deserialize<InstagramWebhook>(jsonPayload, options);
+
+        if (webhook == null)
+        {
+            Console.WriteLine("Failed to deserialize JSON to InstagramWebhook");
+            return Results.BadRequest("Invalid webhook payload");
+        }
+
+        // Log deserialized object
+        Console.WriteLine("Deserialized InstagramWebhook Object:");
+        Console.WriteLine(JsonSerializer.Serialize(webhook, new JsonSerializerOptions { WriteIndented = true }));
+
+        // Access record count safely
+        int recordCount = webhook.Entry?.Count ?? 0;
+        Console.WriteLine($"Record Count: {recordCount}");
+
+        // Call ListPropertiesInTerminal
         webhook.ListPropertiesInTerminal();
-        Console.WriteLine($"webhook secived\n{webhook}");
 
-        try
+        for (int i = 0; i < recordCount; i++)
         {
-            string messageText = webhook.Entry[0].Messaging[0].Message.Text;
-            Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {messageText}");
-            InstagramUser user = await IGagent.Clients[0].InitializeUserInfo(UserID: webhook.Entry[0].Messaging[0].Sender.Id,creatorOnlyPropsToget: "");
-            Console.WriteLine($"message from: {user.Username} | {user.Name}");
-            Console.WriteLine($"Link in the message: {IGagent.ExtractVideoLinkFromMessage(messageText)}");
+            if (webhook.Entry[i].Messaging != null)
+            {
+                InstagramUser sender = await IGagent.Clients![i].InitializeUserInfo(
+                    UserID: webhook.Entry[i].Messaging![0].Sender.Id,
+                    creatorOnlyPropsToget: ""
+                    ) ?? throw new Exception("could not fetch the sender user to authenticate\nHINT: eather sender ID is on right or client thats fetching the data");
+
+                Console.WriteLine($"Message from: {sender.Username} | {sender.Name}");
+
+                if (IGagent.IsMessageFromAdmin(sender))
+                {
+                    Console.WriteLine($"Message from admin user: {sender.Username}");
+
+                    if (webhook.Entry[i].Messaging![0].Message.Attachments != null && webhook.Entry[i].Messaging![0].Message.Attachments![i].Type == IGagent.Reel)
+                    {
+                        string fullTitle = webhook.Entry[i].Messaging![0].Message.Attachments![i].Payload.Title;
+                        string title = fullTitle.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
+                        string videoURL = webhook.Entry[i].Messaging![0].Message.Attachments![i].Payload.Url;
+                        string videoPath = ytDlp.DownloadVideo(videoURL, $"video/{title}.mp4").Replace("video/", "")
+                            ?? throw new Exception("error while downloading the vide for upload\nHINT probably cookie problem");
+                        string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"", ""));
+                        string containerId = await IGagent.Clients[i].PostMedia(
+                            new InstagramMediaContainer(
+                                InstagramMediaType.REELS,
+                                $"{IGagent.PublicBaseURL}{EncodedvideoPath}",
+                                fullTitle),  //  webhook.Entry[i].Messaging![0].Message.Text for laiter so the text with the reel will be the caption too
+                            100);
+                        Console.WriteLine($"Video uploaded successfully with ID: {containerId} \nlink: https://www.instagram.com/{IGagent.Clients[i].User.Username}/ \nCurl ed file from {IGagent.PublicBaseURL}{EncodedvideoPath}");
+                        return Results.Ok($"Video uploaded successfully with ID: {containerId} \nlink: https://www.instagram.com/{IGagent.Clients[i].User.Username}/ \nCurl ed file from {IGagent.PublicBaseURL}{EncodedvideoPath}");
+                    }
+
+                }
+                else
+                {
+                    Console.WriteLine($"Message from non-admin user: {sender.Username}");
+                    return Results.Ok($"Message from non-admin user: {sender}");
+                }
+            }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error accessing Messaging or Message: " + ex.Message + "\nbut changes should be here:");
-            Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {webhook.Entry[0].Changes[0].Value.Message.Text}");
-        }
+        return Results.Ok("No messaging data found in the webhook entry.");
+
+        //HttpContext context /*InstagramWebhook webhook*/) =>
+        //{
+        //    using var streamReader = new StreamReader(context.Request.Body);
+        //    var payload = await streamReader.ReadToEndAsync();
 
 
-        return Results.Ok("Webhook received");
-    }
+
+            //try
+            //{
+
+            //    string messageText = webhook.Entry[0].Messaging[0].Message.Text;
+            //    Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {messageText}");
+            //    InstagramUser user = await IGagent.Clients[0].InitializeUserInfo(UserID: webhook.Entry[0].Messaging[0].Sender.Id, creatorOnlyPropsToget: "");
+            //    Console.WriteLine($"message from: {user.Username} | {user.Name}");
+            //    Console.WriteLine($"Link in the message: {IGagent.ExtractVideoLinkFromMessage(messageText)}");
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine("Error accessing Messaging or Message: " + ex.Message + "\nbut changes should be here:");
+            //    Console.WriteLine($"webhook secived with Deserialization with my class\n{webhook}\nand Message : {webhook.Entry[0].Changes[0].Value.Message.Text}");
+            //}
+
+
+            //Console.WriteLine("Webhook received");
+        }
     catch (Exception ex)
     {
         Console.WriteLine("error: " + ex.Message);
@@ -161,6 +251,7 @@ app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>
     o.Description = "Instagram Webhook Data Endpoint";
     return o;
 });
+
 app.MapPost("/webhook/instagram-test", async (InstagramWebhook webhook) =>
 {
     try
