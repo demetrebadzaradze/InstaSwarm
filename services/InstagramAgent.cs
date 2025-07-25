@@ -25,6 +25,7 @@ namespace InstaSwarm.services
     // </summary>
     public class InstagramAgent
     {
+        public readonly string Reel = "ig_reel";
         public string AdminUsername { get; set; }
         public string PublicBaseURL { get; set; }
         public List<InstagramClient>? Clients { get; set; } = new List<InstagramClient>();
