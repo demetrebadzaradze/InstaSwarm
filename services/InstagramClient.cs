@@ -22,7 +22,7 @@ namespace InstaSwarm.services
             httpClient.DefaultRequestHeaders.Clear();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _userKey);
         }
-        public async Task<InstagramUser> InitializeUserInfo(string? token = null, string? UserID = "me",string? creatorOnlyPropsToget = ",user_id,account_type,profile_picture_url,followers_count,follows_count,media_count")
+        public async Task<InstagramUser> InitializeUserInfo(string? token = null, string? UserID = "me", string? creatorOnlyPropsToget = ",user_id,account_type,profile_picture_url,followers_count,follows_count,media_count")
         {
             _userKey = token ?? _userKey;
             string url = $"https://{IG_API_baseUrl}/{IG_API_Version}/{UserID}?fields=id,username{creatorOnlyPropsToget}&access_token={_userKey}";
@@ -34,8 +34,14 @@ namespace InstaSwarm.services
                     string responseBody = await ResponseMessage.Content.ReadAsStringAsync();
                     JsonDocument jsonDocument = JsonDocument.Parse(responseBody);
 
-                    User = JsonSerializer.Deserialize<InstagramUser>(jsonDocument) ?? InstagramUser.Empty;
+                    InstagramUser fetchedUser = JsonSerializer.Deserialize<InstagramUser>(jsonDocument) ?? InstagramUser.Empty;
 
+                    if (UserID != "me" || UserID != User.UserID)
+                    {
+                        return fetchedUser;
+                    }
+
+                    User = fetchedUser;
                     return User;
                 }
                 else
@@ -57,7 +63,7 @@ namespace InstaSwarm.services
             try
             {
                 HttpResponseMessage response = await httpClient.GetAsync(
-                    $"https://{IG_API_baseUrl}/{IG_API_Version}/{User.UserID}/content_publishing_limit?access_token={_userKey}");
+                    $"https://{IG_API_baseUrl}/{IG_API_Version}/{User.ID}/content_publishing_limit?access_token={_userKey}");
                 if (response.IsSuccessStatusCode)
                 {
                     JsonDocument jsonresponse = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
