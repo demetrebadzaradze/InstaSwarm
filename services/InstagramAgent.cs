@@ -67,6 +67,26 @@ namespace InstaSwarm.services
             }
             return result;
         }
+        /// <summary>
+        /// this method will post on every account in the Clients list
+        /// </summary>
+        public async Task<string> PostToAllAccounts(InstagramMediaContainer mediaContainer,int delayBeforePublishingInSeconds = 15)
+        {
+            if (string.IsNullOrEmpty(mediaContainer.MediaUrl))
+            {
+                throw new ArgumentException("in media container Video link(MediaUrl) cannot be null or empty, in the InstagramAgent.PostToAllAcounts", nameof(mediaContainer.MediaUrl));
+            }
+
+            string result = string.Empty;
+
+            foreach (var client in Clients)
+            {
+                result += $"Posting to account: {client.User.Username}\n";
+                string responce = await client.PostMedia(mediaContainer, delayBeforePublishingInSeconds);
+                result += responce != string.Empty ? $"Posted successfully with container ID: {responce}\n" : $"Failed to post on account: {client.User.Username}\n";
+            }
+            return result;
+        }
         public bool IsMessageFromAdmin(InstagramUser user)
         {
             if (user.Username == AdminUsername)
