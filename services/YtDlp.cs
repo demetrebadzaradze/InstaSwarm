@@ -50,14 +50,14 @@ namespace InstaSwarm.services
                         
                             destination = e.Data.Substring("[Merger] Merging formats into ".Length).Trim();
                     }
-                    //  [download] Destination: video / Video by ittybittythinggs.mp4
+                    //  [download] Destination: video / Video by ittybitinggs.mp4
                     if (e.Data.StartsWith("[download] Destination: "))
                     {
                         Console.WriteLine(e.Data);
                         destination = e.Data.Substring("[download] Destination: ".Length).Trim();
                         Console.WriteLine(destination);
                     }
-                    //  [download] video / Video by ittybittythinggs.mp4 has already been downloaded
+                    //  [download] video / Video by ittybitinggs.mp4 has already been downloaded
                     else if (e.Data.StartsWith("[download] ") && e.Data.Contains(" has already been downloaded"))
                     {
                         Console.WriteLine(e.Data);
@@ -164,6 +164,17 @@ namespace InstaSwarm.services
                 Console.WriteLine($"Error deleting file: {ex.Message}");
                 return false;
             }
+        }
+        // methid that will get a string that will be used as a path to the video file and will return the path but with corected format like no spaces and no dots
+        public string CorrectVideoNameFormat(string videoPath)
+        {
+            if (string.IsNullOrEmpty(videoPath))
+            {
+                throw new ArgumentException("Video path cannot be null or empty.", nameof(videoPath));
+            }
+            // Replace spaces with underscores and remove dots
+            string correctedPath = videoPath.Replace(" ", "_").Replace(".", "");
+            return correctedPath;
         }
     }
 }
