@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace InstaSwarm.services
 {
@@ -61,7 +63,7 @@ namespace InstaSwarm.services
                     else if (e.Data.StartsWith("[download] ") && e.Data.Contains(" has already been downloaded"))
                     {
                         Console.WriteLine(e.Data);
-                        destination = e.Data.Substring("[download] ".Length, e.Data.IndexOf(" has already been downloaded") - "[download] ".Length).Trim();
+                        destination = string.Empty;
                         Console.WriteLine(destination);
                     }
                 };
