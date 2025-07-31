@@ -124,7 +124,10 @@ namespace InstaSwarm.services
                 return InstagramMediaContainer.Empty;
             }
         }
-        public async Task PublishMediaContainer()
+        /// <summary>
+        /// returns id of the media container that was published
+        /// </summary>
+        public async Task<string> PublishMediaContainer()
         {
             string url = $"https://{IG_API_baseUrl}/{IG_API_Version}/{User.UserID}/media_publish";
 
@@ -136,17 +139,21 @@ namespace InstaSwarm.services
                     string responseBody = await response.Content.ReadAsStringAsync();
                     JsonDocument jsonDocument = JsonDocument.Parse(responseBody);
                     Console.WriteLine("Media container published successfully.");
+                    string publishedId = jsonDocument.RootElement.GetProperty("id").GetString()!;
                     Console.WriteLine(jsonDocument.RootElement.ToString());
+                    return publishedId;
                 }
                 else
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
                     Console.WriteLine($"Error: {response.StatusCode}, {responseBody}");
+                    return string.Empty; 
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
+                return string.Empty;
             }
         }
         public async Task<string> PostMedia(InstagramMediaContainer iGMediaContainer, int delayBeforePublishingInSeconds = 15)
