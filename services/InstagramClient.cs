@@ -160,18 +160,19 @@ namespace InstaSwarm.services
         {
             await CreateMediaContainer(iGMediaContainer);
             await Task.Delay(1 * 1000 * delayBeforePublishingInSeconds); // Wait for 15 seconds before publishing
+            string mediaID = string.Empty;
             try
             {
-                await PublishMediaContainer();
-                return LatestInstagramMediaContainer.Id;
+                mediaID = await PublishMediaContainer();
+                return mediaID;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred while waiting: {ex.Message}");
                 Console.WriteLine("trying aggain with another 15 sec delay");
                 await Task.Delay(1 * 1000 * delayBeforePublishingInSeconds * 2); // Wait for 15 seconds before publishing
-                await PublishMediaContainer();
-                return LatestInstagramMediaContainer.Id;
+                mediaID = await PublishMediaContainer();
+                return mediaID;
             }
         }
         // to implement later:
