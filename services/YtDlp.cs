@@ -166,14 +166,27 @@ namespace InstaSwarm.services
             }
         }
         // methid that will get a string that will be used as a path to the video file and will return the path but with corected format like no spaces and no dots
-        public string CorrectVideoNameFormat(string videoPath)
+        public string CorrectVideoNameFormat(string videoName)
         {
-            if (string.IsNullOrEmpty(videoPath))
+            if (string.IsNullOrEmpty(videoName))
             {
-                throw new ArgumentException("Video path cannot be null or empty.", nameof(videoPath));
+                throw new ArgumentException("Video name cannot be null or empty.", nameof(videoName));
             }
             // Replace spaces with underscores and remove dots
-            string correctedPath = videoPath.Replace(" ", "_").Replace(".", "");
+            string correctedPath = videoName.Replace(" ", "_").Replace(".", "").ToLower();
+
+            // Remove all non-letter characters (optional: add numbers if you want)
+            correctedPath = Regex.Replace(correctedPath, @"[^a-zA-Z_]", "");
+
+            //dublicate handling for laiter
+            //int counter = 1;
+            //while (File.Exists(videoName))
+            //{
+            //    finalName = $"{safeName}_{counter}";
+            //    newFullPath = Path.Combine(directory, finalName + extension);
+            //    counter++;
+            //}
+
             return correctedPath;
         }
     }
