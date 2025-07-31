@@ -128,8 +128,8 @@ app.MapGet("/webhook/instagram", (
     return o;
 });
 
-// go back to the raw htpsrequest as the parameter for the webhook and figure out what is going on when reel is sent from phone and make it work
-// https://grok.com/chat/464da0bc-b661-4d60-9da1-99be87f2ef95
+// TODO : add proper error handling and logging
+// TODO : also add a way to handle multiple messages in the same webhook call or webhook mesages managment and using its other values to simplify the code
 app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>   // use HttpContext fro debuging and better understanding of the request
 {
     try
@@ -161,13 +161,21 @@ app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>   // use H
                 {
                     Console.WriteLine($"Message from admin user: {sender.Username}");
 
-                    if (webhook.Entry[i].Messaging![0].Message.Attachments != null && webhook.Entry[i].Messaging![0].Message.Attachments![i].Type == IGagent.Reel)
+                    if (webhook.Entry[i].Messaging![0].Message.Attachments != null &&
+                        webhook.Entry[i].Messaging![0].Message.Attachments![i].Type == IGagent.Reel)
                     {
                         string fullTitle = webhook.Entry[i].Messaging![0].Message.Attachments![i].Payload.Title ?? webhook.Entry[i].Messaging![0].Timestamp.ToString();
                         string title = ytDlp.CorrectVideoNameFormat(fullTitle.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0]);
                         string videoURL = webhook.Entry[i].Messaging![0].Message.Attachments![i].Payload.Url;
                         string videoPath = ytDlp.DownloadVideo(videoURL, $"video/{title}.mp4").Replace("video/", "")
-                            ?? throw new Exception("error while downloading the vide for upload\nHINT probably cookie problem");
+                            ?? throw new Exception("error while downloading the video for upload\nHINT probably cookie problem");
+
+                        if (String.IsNullOrEmpty(videoPath))
+                        {
+                            Console.WriteLine("video is already in the queue");
+                            return Results.Ok("video is already in the queue");
+                        }
+
                         string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"", ""));
                         string containerId = await IGagent.PostToAllAccounts(
                             new InstagramMediaContainer(
