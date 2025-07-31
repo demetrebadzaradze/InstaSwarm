@@ -25,12 +25,15 @@ namespace InstaSwarm.services
     // </summary>
     public class InstagramAgent
     {
+        public int AmountOfStoredVideoLinks = 15;
         public readonly string Reel = "ig_reel";
+        public Queue<string> PreviusVideos = new();
         public string AdminUsername { get; set; }
         public string PublicBaseURL { get; set; }
         public List<InstagramClient>? Clients { get; set; } = new List<InstagramClient>();
-        public InstagramAgent(string[] tokens)
+        public InstagramAgent(string[] tokens, int amountOfStoredVideoLinks = 15)
         {
+            AmountOfStoredVideoLinks = amountOfStoredVideoLinks;
             foreach (string token in tokens)
             {
                 Clients.Add(new InstagramClient(token));
@@ -76,6 +79,11 @@ namespace InstaSwarm.services
             {
                 throw new ArgumentException("in media container Video link(MediaUrl) cannot be null or empty, in the InstagramAgent.PostToAllAcounts", nameof(mediaContainer.MediaUrl));
             }
+            if (PreviusVideos.Count > AmountOfStoredVideoLinks)
+            {
+                PreviusVideos.Dequeue();
+            }
+
 
             string result = string.Empty;
 
@@ -84,8 +92,20 @@ namespace InstaSwarm.services
                 result += $"Posting to account: {client.User.Username}\n";
                 string responce = await client.PostMedia(mediaContainer, delayBeforePublishingInSeconds);
                 result += responce != string.Empty ? $"Posted successfully with container ID: {responce}\n" : $"Failed to post on account: {client.User.Username}\n";
+                if(responce != string.Empty)  PreviusVideos.Enqueue(mediaContainer.MediaUrl);
             }
             return result;
+        }
+        /// <summary>
+        /// this will check if the video link is already in the queue
+        /// </summary>
+        public bool IsVideoInQueue(string videoLink)
+        {
+            if (string.IsNullOrEmpty(videoLink))
+            {
+                throw new ArgumentException("Video link cannot be null or empty.", nameof(videoLink));
+            }
+            return PreviusVideos.Contains(videoLink);
         }
         public bool IsMessageFromAdmin(InstagramUser user)
         {
