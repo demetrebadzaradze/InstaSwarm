@@ -20,12 +20,12 @@ namespace InstaSwarm.services
         public InstagramClient(string userKey, ILoggerFactory loggerFactory)
         {
             _userKey = userKey;
-            User = InitializeUserInfo().GetAwaiter().GetResult();
             httpClient.DefaultRequestHeaders.Clear();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _userKey);
             logger = loggerFactory.CreateLogger<InstagramClient>();
             logger.BeginScope($"InstagramClient: ");
             logger.LogInformation($"InstagramClient initialized with user key: {_userKey.Substring(0, (int)(_userKey.Length * charactersToShowWhileLogging))}");
+            User = InitializeUserInfo().GetAwaiter().GetResult();
         }
         public async Task<InstagramUser> InitializeUserInfo(
             string? token = null,
