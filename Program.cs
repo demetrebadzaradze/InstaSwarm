@@ -1,4 +1,4 @@
-using InstaSwarm.services;
+﻿using InstaSwarm.services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -60,7 +60,7 @@ if (String.IsNullOrEmpty(ytDlpPath))
 {
     ytDlpPath = "yt-dlp.exe"; // Default path if not set in environment variables
 }
-YtDlp ytDlp = new YtDlp(ytDlpPath, DotNetEnv.Env.GetString("COOKIES_PATH") ?? "cookies.txt");
+YtDlp ytDlp = new YtDlp(loggerFactory, ytDlpPath, DotNetEnv.Env.GetString("COOKIES_PATH") ?? "cookies.txt");
 
 app.MapGet("/", () =>
 {
@@ -80,7 +80,7 @@ app.MapGet("/dowloadvideo", (string videoURL) =>
 app.MapGet("/postvideo", (string videoURL, string caption) =>
 {
     string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
-    InstagramClient client = new InstagramClient(secret);
+    InstagramClient client = new InstagramClient(secret, loggerFactory);
     return client.PostMedia(
         new InstagramMediaContainer(
             InstagramMediaType.REELS,
@@ -96,7 +96,7 @@ app.MapGet("/download-and-upload", async (string videoURL, string caption) =>
     string baseurl = DotNetEnv.Env.GetString("PUBLIC_BASE_URL");
     string videoPath = ytDlp.DownloadVideo(videoURL).Replace("video/", "");
     string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"", ""));
-    InstagramClient client = new InstagramClient(secret);
+    InstagramClient client = new InstagramClient(secret, loggerFactory);
     string localVideoURL = $"{baseurl}{EncodedvideoPath}";
     string containerId = await client.PostMedia(
         new InstagramMediaContainer(
@@ -146,15 +146,15 @@ app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>   // use H
     {
         if (webhook == null)
         {
-            Console.WriteLine("Failed to deserialize JSON to InstagramWebhook");
-            return Results.BadRequest("Invalid webhook payload");
+            logger.LogWarning("Invalid or empty webhook payload received");
+            return Results.BadRequest(new { error = "Invalid webhook payload" });
         }
 
-        Console.WriteLine("Deserialized InstagramWebhook Object:");
-        Console.WriteLine(JsonSerializer.Serialize(webhook, new JsonSerializerOptions { WriteIndented = true }));
+        logger.LogInformation("Deserialized InstagramWebhook Object:");
+        logger.LogInformation(JsonSerializer.Serialize(webhook, new JsonSerializerOptions { WriteIndented = true }));
 
         int recordCount = webhook.Entry?.Count ?? 0;
-        Console.WriteLine($"Record Count: {recordCount}");
+        logger.LogInformation($"Record Count: {recordCount}");
 
         for (int i = 0; i < recordCount; i++)
         {
@@ -165,11 +165,11 @@ app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>   // use H
                     creatorOnlyPropsToget: ""
                     ) ?? throw new Exception("could not fetch the sender user to authenticate\nHINT: eather sender ID is on right or client thats fetching the data");
 
-                Console.WriteLine($"Message from: {sender.Username} | {sender.Name}");
+                logger.LogInformation($"Message from: {sender.Username}");
 
                 if (IGagent.IsMessageFromAdmin(sender))
                 {
-                    Console.WriteLine($"Message from admin user: {sender.Username}");
+                    logger.LogInformation($"That user is ADMIN ↑ ↑ ↑ ↑ ↑ ↑");
 
                     if (webhook.Entry[i].Messaging![0].Message.Attachments != null &&
                         webhook.Entry[i].Messaging![0].Message.Attachments![i].Type == IGagent.Reel)
@@ -182,26 +182,26 @@ app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>   // use H
 
                         if (String.IsNullOrEmpty(videoPath))
                         {
-                            Console.WriteLine("video is already in the queue");
+                            logger.LogInformation("video is already in the queue");
                             return Results.Ok("video is already in the queue");
                         }
 
                         string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"", ""));
-                        string containerId = await IGagent.PostToAllAccounts(
+                        string IGAggentResponce = await IGagent.PostToAllAccounts(
                             new InstagramMediaContainer(
                                 InstagramMediaType.REELS,
                                 $"{IGagent.PublicBaseURL}{videoPath.Replace("video/", "")}",
                                 fullTitle),  //  webhook.Entry[i].Messaging![0].Message.Text for laiter so the text with the reel will be the caption too
                             100);
-                        Console.WriteLine($"Video uploaded successfully with ID: {containerId} \nlink: https://www.instagram.com/{IGagent.Clients[i].User.Username}/ \nCurl ed file from {IGagent.PublicBaseURL}{videoPath}");
+                        //logger.LogInformation($"{IGAggentResponce} \nlink: https://www.instagram.com/{IGagent.Clients[i].User.Username}/ \nCurl ed file from {IGagent.PublicBaseURL}{videoPath}");
                         YtDlp.DeleteVideoFile($"video/{videoPath}");
-                        return Results.Ok($"Video uploaded successfully with ID: {containerId} \nlink: https://www.instagram.com/{IGagent.Clients[i].User.Username}/ \nCurl ed file from {IGagent.PublicBaseURL}{videoPath}");
+                        return Results.Ok();
                     }
 
                 }
                 else
                 {
-                    Console.WriteLine($"Message from non-admin user: {sender.Username}");
+                    logger.LogInformation($"Message from non-admin user: {sender.Username}");
                     return Results.Ok($"Message from non-admin user: {sender}");
                 }
             }
@@ -210,7 +210,7 @@ app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>   // use H
         }
     catch (Exception ex)
     {
-        Console.WriteLine("error: " + ex.Message);
+        logger.LogError("error: " + ex.Message);
         return Results.BadRequest($"Error processing webhook: {ex.Message}");
     }
 })

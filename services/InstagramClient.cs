@@ -7,6 +7,8 @@ namespace InstaSwarm.services
 {
     public class InstagramClient
     {
+        private readonly double charactersToShowWhileLogging = 0.3;
+        private readonly ILogger<InstagramClient> logger;
         [Required]
         private string _userKey { get; set; }
         private HttpClient httpClient = new HttpClient();
@@ -15,15 +17,24 @@ namespace InstaSwarm.services
         public InstagramMediaContainer LatestInstagramMediaContainer { get; set; } = InstagramMediaContainer.Empty;
         public InstagramUser User { get; set; } = InstagramUser.Empty;
 
-        public InstagramClient(string userKey)
+        public InstagramClient(string userKey, ILoggerFactory loggerFactory)
         {
             _userKey = userKey;
             User = InitializeUserInfo().GetAwaiter().GetResult();
             httpClient.DefaultRequestHeaders.Clear();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _userKey);
+            logger = loggerFactory.CreateLogger<InstagramClient>();
+            logger.BeginScope($"InstagramClient: ");
+            logger.LogInformation($"InstagramClient initialized with user key: {_userKey.Substring(0, (int)(_userKey.Length * charactersToShowWhileLogging))}");
         }
-        public async Task<InstagramUser> InitializeUserInfo(string? token = null, string? UserID = "me", string? creatorOnlyPropsToget = ",user_id,account_type,profile_picture_url,followers_count,follows_count,media_count")
+        public async Task<InstagramUser> InitializeUserInfo(
+            string? token = null,
+            string? UserID = "me",
+            string? creatorOnlyPropsToget = ",user_id,account_type,profile_picture_url,followers_count,follows_count,media_count")
         {
+            logger.BeginScope("InstagramClient.InitializeUserInfo: ");
+            logger.LogInformation($"Fetching user info for UserID: {UserID} \nwith token: {token?.Substring(0, (int)(token.Length * charactersToShowWhileLogging)) ?? "null"} \nwith propertys {creatorOnlyPropsToget} ");
+
             _userKey = token ?? _userKey;
             string url = $"https://{IG_API_baseUrl}/{IG_API_Version}/{UserID}?fields=id,username{creatorOnlyPropsToget}&access_token={_userKey}";
             try
@@ -46,19 +57,20 @@ namespace InstaSwarm.services
                 }
                 else
                 {
-                    Console.WriteLine($"Error: {ResponseMessage.StatusCode}" + "\nHINT: Probably token is invalid");
+                    logger.LogError($"Failed to fetch user info: {ResponseMessage.StatusCode} || HINT: Probably token is invalid");
                     return InstagramUser.Error;
                 }
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
+                logger.LogError($"An error occurred: {ex.Message}");
                 return InstagramUser.Error;
             }
         }
         public async Task<int> GetAvalableContentPublishesCount()
         {
+            logger.BeginScope("InstagramClient.GetAvalableContentPublishesCount: ");
             int daylyPublishLimit = 100;
             try
             {
@@ -68,23 +80,29 @@ namespace InstaSwarm.services
                 {
                     JsonDocument jsonresponse = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
                     int usedPublishesCount = jsonresponse.RootElement.GetProperty("data")[0].GetProperty("quota_usage").GetInt32();
+                    logger.LogInformation($"Used publishes count: {usedPublishesCount}");
                     return daylyPublishLimit - usedPublishesCount;
                 }
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"An error occurred while fetching content publishing limit: {ex.Message}");
+                logger.LogError($"HttpRequestException: {ex.Message}");
                 return -1;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+                logger.LogError($"An error occurred: {ex.Message}");
                 return -1;
             }
             return -1; // Default return value in case of failure
         }
         public async Task<InstagramMediaContainer> CreateMediaContainer(InstagramMediaContainer iGMediaContainer)
         {
+            logger.BeginScope("InstagramClient.CreateMediaContainer: ");
+            logger.LogInformation($"Creating media container with type: {iGMediaContainer.MediaType}, " +
+                $"\nURL: {iGMediaContainer.MediaUrl}, " +
+                $"\nCaption: {iGMediaContainer.Caption?.Substring(0, (int)(iGMediaContainer.Caption.Length * charactersToShowWhileLogging)) ?? "null"}");
+
             string url = $"https://{IG_API_baseUrl}/{IG_API_Version}/{User.UserID}/media";
 
             try
@@ -94,33 +112,31 @@ namespace InstaSwarm.services
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
                     JsonDocument jsonDocument = JsonDocument.Parse(responseBody);
-                    Console.WriteLine("Media container created successfully.");
-                    Console.WriteLine(jsonDocument.RootElement.ToString());
 
                     try
                     {
                         string containerID = jsonDocument.RootElement.GetProperty("id").GetString()!;
                         iGMediaContainer.Id = containerID;
+                        logger.LogInformation($"Media container created successfully with ID: {containerID}");
                         LatestInstagramMediaContainer = iGMediaContainer;
                         return iGMediaContainer;
                     }
                     catch (KeyNotFoundException)
                     {
-                        Console.WriteLine("Container ID not found in the response.");
+                        logger.LogError("Container ID not found in the response.");
                         return InstagramMediaContainer.Empty;
                     }
                 }
                 else
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Error: {response.StatusCode}, {responseBody}");
-                    Console.WriteLine($"Error: {response.StatusCode}, {response.Content.ToString}, {response.Headers}");
+                    logger.LogError($"Error creating media container: {response.StatusCode}, {responseBody}");      // could add response.Content.ToString response.Headers
                     return InstagramMediaContainer.Empty;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
+                logger.LogError($"An error occurred: {ex.Message}");
                 return InstagramMediaContainer.Empty;
             }
         }
@@ -129,6 +145,9 @@ namespace InstaSwarm.services
         /// </summary>
         public async Task<string> PublishMediaContainer()
         {
+            logger.BeginScope("InstagramClient.PublishMediaContainer: ");
+            logger.LogInformation($"Publishing media container with ID: {LatestInstagramMediaContainer.Id} for User: {User.Username}");
+
             string url = $"https://{IG_API_baseUrl}/{IG_API_Version}/{User.UserID}/media_publish";
 
             try
@@ -138,28 +157,31 @@ namespace InstaSwarm.services
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
                     JsonDocument jsonDocument = JsonDocument.Parse(responseBody);
-                    Console.WriteLine("Media container published successfully.");
                     string publishedId = jsonDocument.RootElement.GetProperty("id").GetString()!;
-                    Console.WriteLine(jsonDocument.RootElement.ToString());
+                    logger.LogInformation($"Published media container successfully with ID: {publishedId}");
                     return publishedId;
                 }
                 else
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Error: {response.StatusCode}, {responseBody}");
-                    return string.Empty; 
+                    logger.LogError($"Error publishing media container: {response.StatusCode}, {responseBody}");
+                    return string.Empty;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
+                logger.LogError($"An error occurred : {ex.Message}");
                 return string.Empty;
             }
         }
         public async Task<string> PostMedia(InstagramMediaContainer iGMediaContainer, int delayBeforePublishingInSeconds = 15)
         {
+            logger.BeginScope("InstagramClient.PostMedia: ");
+            logger.LogInformation($"Posting media with type: {iGMediaContainer.MediaType}, " +
+                $"\nURL: {iGMediaContainer.MediaUrl}, " +
+                $"\nCaption: {iGMediaContainer.Caption?.Substring(0, (int)(iGMediaContainer.Caption.Length * charactersToShowWhileLogging)) ?? "null"}");
             await CreateMediaContainer(iGMediaContainer);
-            await Task.Delay(1 * 1000 * delayBeforePublishingInSeconds); // Wait for 15 seconds before publishing
+            await Task.Delay(1 * 1000 * delayBeforePublishingInSeconds); 
             string mediaID = string.Empty;
             try
             {
@@ -168,9 +190,9 @@ namespace InstaSwarm.services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred while waiting: {ex.Message}");
-                Console.WriteLine("trying aggain with another 15 sec delay");
-                await Task.Delay(1 * 1000 * delayBeforePublishingInSeconds * 2); // Wait for 15 seconds before publishing
+                logger.LogError($"An error occurred while waiting: {ex.Message}");
+                logger.LogInformation($"Trying again with another {delayBeforePublishingInSeconds} sec delay");
+                await Task.Delay(1 * 1000 * delayBeforePublishingInSeconds * 2); 
                 mediaID = await PublishMediaContainer();
                 return mediaID;
             }
@@ -183,10 +205,15 @@ namespace InstaSwarm.services
         // folow this link for more info: https://developers.facebook.com/docs/instagram-platform/reference/refresh_access_token/
         public async Task<string> RefreshAccessToken(string? longLivedAccessToken = "")
         {
+            
+            logger.BeginScope("InstagramClient.RefreshAccessToken: ");
+            logger.LogInformation($"Refreshing access token for User: {User.Username} \n" +
+                $"with token: {longLivedAccessToken?.Substring(0, (int)(longLivedAccessToken.Length * charactersToShowWhileLogging)) ?? "null"}");
+
             if (string.IsNullOrEmpty(longLivedAccessToken))
             {
                 longLivedAccessToken = _userKey;
-                Console.WriteLine("Long-lived access token is required.");
+                logger.LogWarning("Long-lived access token is not provided, using the current user key.");
             }
 
             string url = $"https://{IG_API_baseUrl}/refresh_access_token?grant_type=ig_refresh_token&access_token={longLivedAccessToken}";
@@ -197,23 +224,22 @@ namespace InstaSwarm.services
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
                     JsonDocument jsonDocument = JsonDocument.Parse(responseBody);
-                    Console.WriteLine("Access token refreshed successfully.");
-                    Console.WriteLine(jsonDocument.RootElement.ToString());
+                    logger.LogInformation($"Response from refresh access token: {jsonDocument.RootElement.GetProperty("access_token").GetString()!}");
                     _userKey = jsonDocument.RootElement.GetProperty("access_token").GetString()!;
                     Environment.SetEnvironmentVariable("INSTAGRAM_USER_TOKEN", _userKey);
                     DotNetEnv.Env.Load();
-                    Console.WriteLine(DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN"));
+                    logger.LogInformation($"New access token set: {DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN")}");
                     return jsonDocument.RootElement.GetProperty("expires_in").GetInt32().ToString();
                 }
                 else
                 {
-                    Console.WriteLine($"Error: {response.StatusCode}");
+                    logger.LogError($"Failed to refresh access token: {response.StatusCode}");
                     return string.Empty;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
+                logger.LogError($"An error occurred : {ex.Message}");
                 return string.Empty;
             }
         }
