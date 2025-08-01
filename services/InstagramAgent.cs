@@ -13,6 +13,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace InstaSwarm.services
 {
+    //stuff to improve: each instagramclient class object has its own logger, but it would be better to have a single logger for the whole InstagramAgent class somohow.
     // <summary>
     //    Design Goals for InstagramAgent
     //    Coordinate Workflow: Manage the process of receiving video links, downloading, storing, and uploading to Instagram accounts.
@@ -25,18 +26,21 @@ namespace InstaSwarm.services
     // </summary>
     public class InstagramAgent
     {
+        private readonly ILogger<InstagramAgent> logger;
         public int AmountOfStoredVideoLinks = 15;
         public readonly string Reel = "ig_reel";
         public Queue<string> PreviusVideos = new();
         public string AdminUsername { get; set; }
         public string PublicBaseURL { get; set; }
         public List<InstagramClient>? Clients { get; set; } = new List<InstagramClient>();
-        public InstagramAgent(string[] tokens, int amountOfStoredVideoLinks = 15)
+        public InstagramAgent(string[] tokens, ILoggerFactory loggerFactory1,int amountOfStoredVideoLinks = 15)
         {
+            logger = loggerFactory1.CreateLogger<InstagramAgent>();
+
             AmountOfStoredVideoLinks = amountOfStoredVideoLinks;
             foreach (string token in tokens)
             {
-                Clients.Add(new InstagramClient(token));
+                Clients.Add(new InstagramClient(token, loggerFactory1));
             }
 
             DotNetEnv.Env.Load();
@@ -115,7 +119,6 @@ namespace InstaSwarm.services
             }
             else
             {
-                Console.WriteLine($"Message from non-admin user: {user.Username}");
                 return false;
             }
         }
