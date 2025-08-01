@@ -28,6 +28,17 @@ builder.WebHost.ConfigureKestrel(options =>
     });
 });
 
+//add proper logging
+using ILoggerFactory loggerFactory =
+    LoggerFactory.Create(builder =>
+        builder.AddSimpleConsole(options =>
+        {
+            options.IncludeScopes = true;
+            options.SingleLine = true;
+            options.TimestampFormat = "HH:mm:ss ";
+        }));
+ILogger<Program> logger = loggerFactory.CreateLogger<Program>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -53,9 +64,8 @@ YtDlp ytDlp = new YtDlp(ytDlpPath, DotNetEnv.Env.GetString("COOKIES_PATH") ?? "c
 
 app.MapGet("/", () =>
 {
-    //string secret = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKEN");
-    //InstagramClient client = new InstagramClient(secret);
-    //return client.RefreshAccessToken();
+    logger.BeginScope("Welcome to InstaSwarm API!");
+    logger.LogCritical("beggining of the API");
 })
 .WithName("RefreshAccessToken")
 .WithOpenApi();
