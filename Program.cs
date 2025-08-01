@@ -52,7 +52,9 @@ app.UseHttpsRedirection();
 
 // Initialize InstagramAgent with tokens from environment variables
 InstagramAgent IGagent = new InstagramAgent(
-    DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKENS")?.Split(',') ?? Array.Empty<string>());
+    DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKENS")?.Split(',') ?? Array.Empty<string>(),
+    loggerFactory
+    );
 
 // Initialize YtDlp with the path from environment variables or default to "yt-dlp.exe"s
 string ytDlpPath = DotNetEnv.Env.GetString("YTDLP_PATH");
