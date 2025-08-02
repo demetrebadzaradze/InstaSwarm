@@ -1,15 +1,4 @@
-﻿using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
-using Microsoft.VisualBasic;
-using System;
-using System.Data.SqlTypes;
-using System.Diagnostics;
-using System.IO;
-using System.Net;
-using System.Reflection.Metadata;
-using System.Runtime.Intrinsics.Arm;
-using System.Runtime.Intrinsics.X86;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using Microsoft.AspNetCore;
 
 namespace InstaSwarm.services
 {
@@ -27,25 +16,35 @@ namespace InstaSwarm.services
     public class InstagramAgent
     {
         private readonly ILogger<InstagramAgent> logger;
-        public int AmountOfStoredVideoLinks = 15;
+        private const int MaxUniqueWebhookTimes = 20;
+        private Queue<string>? _uniqueMessagingMIDs = new();
         public readonly string Reel = "ig_reel";
-        public Queue<string> PreviusVideos = new();
-        public string AdminUsername { get; set; }
+        public InstagramUser AdminUser { get; set; } = new();
         public string PublicBaseURL { get; set; }
         public List<InstagramClient>? Clients { get; set; } = new List<InstagramClient>();
-        public InstagramAgent(string[] tokens, ILoggerFactory loggerFactory1,int amountOfStoredVideoLinks = 15)
+        public InstagramAgent(string[] tokens, string AdminInstagramID, ILoggerFactory loggerFactory1)
         {
             logger = loggerFactory1.CreateLogger<InstagramAgent>();
 
-            AmountOfStoredVideoLinks = amountOfStoredVideoLinks;
             foreach (string token in tokens)
             {
                 Clients.Add(new InstagramClient(token, loggerFactory1));
             }
 
             DotNetEnv.Env.Load();
-            PublicBaseURL = DotNetEnv.Env.GetString("PUBLIC_BASE_URL") ?? throw new InvalidOperationException("PUBLIC_BASE_URL is missing in environment variables"); ;
-            AdminUsername = DotNetEnv.Env.GetString("ADMIN_INSTAGRAM_USER_USERNAME") ?? throw new InvalidOperationException("ADMIN_INSTAGRAM_USER_USERNAME is missing in environment variables"); ;
+            PublicBaseURL = DotNetEnv.Env.GetString("PUBLIC_BASE_URL") ?? throw new InvalidOperationException("PUBLIC_BASE_URL is missing in environment variables");
+
+            InitializeAdmin(AdminInstagramID).Wait();
+        }
+        private async Task InitializeAdmin(string AdminInstagramID)
+        {
+            logger.BeginScope($"InstagramAgent.InitializeAdmin: ");
+            logger.LogInformation($"Initializing Admin...");
+
+            AdminUser = await Clients![0].InitializeUserInfo(
+                    UserID: AdminInstagramID,
+                    creatorOnlyPropsToget: ""
+                    );
         }
         public async Task<string> PublishVideoFromLink(string videoLink, string caption, YtDlp ytDlp)
         {
@@ -77,15 +76,11 @@ namespace InstaSwarm.services
         /// <summary>
         /// this method will post on every account in the Clients list
         /// </summary>
-        public async Task<string> PostToAllAccounts(InstagramMediaContainer mediaContainer,int delayBeforePublishingInSeconds = 15)
+        public async Task<string> PostToAllAccounts(InstagramMediaContainer mediaContainer, int delayBeforePublishingInSeconds = 15)
         {
             if (string.IsNullOrEmpty(mediaContainer.MediaUrl))
             {
                 throw new ArgumentException("in media container Video link(MediaUrl) cannot be null or empty, in the InstagramAgent.PostToAllAcounts", nameof(mediaContainer.MediaUrl));
-            }
-            if (PreviusVideos.Count > AmountOfStoredVideoLinks)
-            {
-                PreviusVideos.Dequeue();
             }
 
 
@@ -96,32 +91,12 @@ namespace InstaSwarm.services
                 result += $"Posting to account: {client.User.Username}\n";
                 string responce = await client.PostMedia(mediaContainer, delayBeforePublishingInSeconds);
                 result += responce != string.Empty ? $"Posted successfully with container ID: {responce}\n" : $"Failed to post on account: {client.User.Username}\n";
-                if(responce != string.Empty)  PreviusVideos.Enqueue(mediaContainer.MediaUrl);
             }
             return result;
         }
         /// <summary>
         /// this will check if the video link is already in the queue
         /// </summary>
-        public bool IsVideoInQueue(string videoLink)
-        {
-            if (string.IsNullOrEmpty(videoLink))
-            {
-                throw new ArgumentException("Video link cannot be null or empty.", nameof(videoLink));
-            }
-            return PreviusVideos.Contains(videoLink);
-        }
-        public bool IsMessageFromAdmin(InstagramUser user)
-        {
-            if (user.Username == AdminUsername)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
         public string ExtractVideoLinkFromMessage(string messageText)
         {
             if (string.IsNullOrEmpty(messageText))
@@ -156,7 +131,7 @@ namespace InstaSwarm.services
             }
             return "";
         }
-        public bool IsValidVideoLink(string videoLink, out string cleanLink )
+        public bool IsValidVideoLink(string videoLink, out string cleanLink)
         {
             if (string.IsNullOrEmpty(videoLink))
             {
@@ -174,6 +149,169 @@ namespace InstaSwarm.services
             cleanLink = "";
             return false;
         }
+        // <summary>`
+        // this methis is used to determine if webhook is unique or was it already processed
+        // </summary>
+        public bool IsUniqueMeassagingMID(Messaging messaging)
+        {
+            logger.BeginScope($"InstagramAgent.IsUniqueMeassagingMID: ");
+            logger.LogInformation($"Checking uniqueness of Message MID that was sent at: {messaging.Timestamp}");
 
+            if (_uniqueMessagingMIDs!.Contains(messaging.Message.Mid))
+            {
+                logger.LogInformation($"Meassage with MID {messaging.Message.Mid} is not unique, already processing.");
+                return false;
+            }
+            else
+            {
+                logger.LogInformation($"Webhook with ID {messaging.Message.Mid} is unique, processing it.");
+                _uniqueMessagingMIDs.Enqueue(messaging.Message.Mid);
+                TrimOldUniqueMessagingMIDs();
+                return true;
+            }
+        }
+        /// <summary>
+        /// method proceses the webhook and returns a response
+        /// </summary>
+        public async Task<string> ProcessWebhook(InstagramWebhook webhook, YtDlp ytDlp)
+        {
+            logger.BeginScope($"InstagramAgent.ProcessWebhook: ");
+            logger.LogInformation($"Processing webhook with Object: {webhook.Object}");
+
+            if (webhook == null || webhook.Entry == null || webhook.Entry.Count == 0 || webhook.Object != "instagram")
+            {
+                logger.LogWarning("Invalid empty or not needed webhook payload received");
+                return "Invalid or not needed webhook payload";
+            }
+
+            foreach (Entry entry in webhook.Entry)
+            {
+                if (entry.Messaging == null || entry.Messaging.Count == 0)
+                {
+                    logger.LogWarning($"No messaging data found in the webhook entry id={entry.Id}.");
+                    continue;
+                }
+                foreach (Messaging msg in entry.Messaging)
+                {
+                    string senderID = msg.Sender.Id;
+                    if (senderID != AdminUser.ID)
+                    {
+                        logger.LogInformation($"sender was not ADMIN. it was someone with id: {senderID}"); // for future maybe get more info about who sent the message
+                        continue; // Skip processing if the message is not from the admin
+                    }
+                    if (!IsUniqueMeassagingMID(msg))
+                    {
+                        logger.LogInformation($"Webhook is not unique, skipping processing.");
+                        continue; // Skip processing if the webhook is not unique
+                    }
+                    string? text = msg.Message.Text;
+                    logger.LogInformation($"Message from admin with ID: {senderID} at [{msg.Timestamp}] texted: {text}");
+                    if (msg.Message.Attachments == null)
+                    {
+                        logger.LogInformation("no attachment was sent with a message. skipping processing");
+                        continue; // Skip processing if there are no attachments
+                    }
+
+                    foreach (Attachment attachment in msg.Message.Attachments)
+                    {
+                        if (attachment.Type != Reel)
+                        {
+                            logger.LogInformation("attachment sent was not a Reel. skipping processing");
+                            continue; // Skip processing if the attachment is not a Reel
+                        }
+
+                        // in future if text sent is not null use it as a caption but reuse the tags from the title.
+                        string fullTitle = attachment.Payload.Title ?? entry.Time.ToString();
+                        string firstLine = fullTitle.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
+                        string title = ytDlp.CorrectVideoNameFormat(firstLine);
+                        string videoURL = attachment.Payload.Url;
+                        string videoPath = ytDlp.DownloadVideo(videoURL, $"video/{title}.mp4")
+                            ?? throw new Exception("error while downloading the video for upload\nHINT probably cookie problem");
+
+                        string IGAggentResponce = await PostToAllAccounts(
+                            new InstagramMediaContainer(
+                                InstagramMediaType.REELS,
+                                $"{PublicBaseURL}{videoPath.Replace("video/", "")}",
+                                fullTitle),
+                            100);
+
+                        return IGAggentResponce != string.Empty
+                            ? $"success: {IGAggentResponce}"
+                            : "Failed to post video on all accounts.";
+                    }
+                }
+            }
+            return "webhook processing finished";
+        }
+
+        private bool IsMessageFromAdmin(InstagramWebhook webhook)
+        {
+            if (webhook.Entry == null || webhook.Entry.Count == 0)
+            {
+                return false;
+            }
+            foreach (var entry in webhook.Entry)
+            {
+                if (entry.Messaging != null && entry.Messaging.Count > 0)
+                {
+                    var sender = entry.Messaging[0].Sender;
+                    if (sender != null && sender.Id == AdminUser.ID)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        private void TrimOldUniqueMessagingMIDs()
+        {
+            if (_uniqueMessagingMIDs!.Count > MaxUniqueWebhookTimes)
+            {
+                _uniqueMessagingMIDs.Dequeue();
+            }
+        }
     }
 }
+
+
+/* var messaging = entry.Messaging[0];
+                string senderID = messaging.Sender;
+                var recipient = messaging.Recipient;
+                if (senderID == null || recipient == null)
+                {
+                    logger.LogWarning("Sender or recipient information is missing in the webhook entry.");
+                    continue;
+                }
+                if (!IsMessageFromAdmin(webhook) || !IsUniqueWebhookFromAdmin(webhook))
+                {
+                    logger.LogInformation("Message is not from admin or is not unique, skipping processing.");
+                    continue;
+                }
+                string videoLink = ExtractVideoLinkFromMessage(messaging.Message.Text);
+                if (string.IsNullOrEmpty(videoLink))
+                {
+                    logger.LogInformation("No valid video link found in the message text.");
+                    continue;
+                }
+                string fullTitle = messaging.Message.Attachments?[0].Payload.Title ?? entry.Time.ToString();
+                string title = ytDlp.CorrectVideoNameFormat(fullTitle.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0]);
+                
+                string videoPath = ytDlp.DownloadVideo(videoLink, $"video/{title}.mp4").Replace("video/", "");
+                
+                if (string.IsNullOrEmpty(videoPath))
+                {
+                    logger.LogInformation("Video is already in the queue or download failed.");
+                    return "Video is already in the queue or download failed.";
+                }
+                string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"", ""));
+                
+                string IGAggentResponce = await PostToAllAccounts(
+                    new InstagramMediaContainer(
+                        InstagramMediaType.REELS,
+                        $"{PublicBaseURL}{videoPath}",
+                        fullTitle), 100);
+                YtDlp.DeleteVideoFile($"video/{videoPath}");
+                
+                return IGAggentResponce;
+
+*/

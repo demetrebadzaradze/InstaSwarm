@@ -53,6 +53,7 @@ app.UseHttpsRedirection();
 // Initialize InstagramAgent with tokens from environment variables
 InstagramAgent IGagent = new InstagramAgent(
     DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKENS")?.Split(',') ?? Array.Empty<string>(),
+    DotNetEnv.Env.GetString("ADMIN_INSTAGRAM_USER_ID") ?? throw new InvalidOperationException("ADMIN_INSTAGRAM_USER_USERNAME is missing in environment variables"),
     loggerFactory
     );
 
@@ -158,58 +159,8 @@ app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>   // use H
         int recordCount = webhook.Entry?.Count ?? 0;
         logger.LogInformation($"Record Count: {recordCount}");
 
-        for (int i = 0; i < recordCount; i++)
-        {
-            if (webhook.Entry[i].Messaging != null)
-            {
-                InstagramUser sender = await IGagent.Clients![i].InitializeUserInfo(
-                    UserID: webhook.Entry[i].Messaging![0].Sender.Id,
-                    creatorOnlyPropsToget: ""
-                    ) ?? throw new Exception("could not fetch the sender user to authenticate\nHINT: eather sender ID is on right or client thats fetching the data");
-
-                logger.LogInformation($"Message from: {sender.Username}");
-
-                if (IGagent.IsMessageFromAdmin(sender))
-                {
-                    logger.LogInformation($"That user is ADMIN ↑ ↑ ↑ ↑ ↑ ↑");
-
-                    if (webhook.Entry[i].Messaging![0].Message.Attachments != null &&
-                        webhook.Entry[i].Messaging![0].Message.Attachments![i].Type == IGagent.Reel)
-                    {
-                        string fullTitle = webhook.Entry[i].Messaging![0].Message.Attachments![i].Payload.Title ?? webhook.Entry[i].Messaging![0].Timestamp.ToString();
-                        string title = ytDlp.CorrectVideoNameFormat(fullTitle.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0]);
-                        string videoURL = webhook.Entry[i].Messaging![0].Message.Attachments![i].Payload.Url;
-                        string videoPath = ytDlp.DownloadVideo(videoURL, $"video/{title}.mp4").Replace("video/", "")
-                            ?? throw new Exception("error while downloading the video for upload\nHINT probably cookie problem");
-
-                        if (String.IsNullOrEmpty(videoPath))
-                        {
-                            logger.LogInformation("video is already in the queue");
-                            return Results.Ok("video is already in the queue");
-                        }
-
-                        string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"", ""));
-                        string IGAggentResponce = await IGagent.PostToAllAccounts(
-                            new InstagramMediaContainer(
-                                InstagramMediaType.REELS,
-                                $"{IGagent.PublicBaseURL}{videoPath.Replace("video/", "")}",
-                                fullTitle),  //  webhook.Entry[i].Messaging![0].Message.Text for laiter so the text with the reel will be the caption too
-                            100);
-                        //logger.LogInformation($"{IGAggentResponce} \nlink: https://www.instagram.com/{IGagent.Clients[i].User.Username}/ \nCurl ed file from {IGagent.PublicBaseURL}{videoPath}");
-                        YtDlp.DeleteVideoFile($"video/{videoPath}");
-                        return Results.Ok();
-                    }
-
-                }
-                else
-                {
-                    logger.LogInformation($"Message from non-admin user: {sender.Username}");
-                    return Results.Ok($"Message from non-admin user: {sender}");
-                }
-            }
-        }
-        return Results.Ok("No messaging data found in the webhook entry.");
-        }
+        return Results.Ok(await IGagent.ProcessWebhook(webhook, ytDlp));
+    }
     catch (Exception ex)
     {
         logger.LogError("error: " + ex.Message);
