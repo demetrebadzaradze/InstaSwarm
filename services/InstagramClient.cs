@@ -143,16 +143,16 @@ namespace InstaSwarm.services
         /// <summary>
         /// returns id of the media container that was published
         /// </summary>
-        public async Task<string> PublishMediaContainer()
+        public async Task<string> PublishMediaContainer(string mediaContainerID)
         {
             logger.BeginScope("InstagramClient.PublishMediaContainer: ");
-            logger.LogInformation($"Publishing media container with ID: {LatestInstagramMediaContainer.Id} for User: {User.Username}");
+            logger.LogInformation($"Publishing media container with ID: {mediaContainerID} for User: {User.Username}");
 
             string url = $"https://{IG_API_baseUrl}/{IG_API_Version}/{User.UserID}/media_publish";
 
             try
             {
-                HttpResponseMessage response = await httpClient.PostAsync(url, InstagramMediaContainer.ContainerPublishingIDAsJson(LatestInstagramMediaContainer.Id));
+                HttpResponseMessage response = await httpClient.PostAsync(url, InstagramMediaContainer.ContainerPublishingIDAsJson(mediaContainerID));
                 if (response.IsSuccessStatusCode)
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
@@ -180,21 +180,22 @@ namespace InstaSwarm.services
             logger.LogInformation($"Posting media with type: {iGMediaContainer.MediaType}, " +
                 $"\nURL: {iGMediaContainer.MediaUrl}, " +
                 $"\nCaption: {iGMediaContainer.Caption?.Substring(0, (int)(iGMediaContainer.Caption.Length * charactersToShowWhileLogging)) ?? "null"}");
-            await CreateMediaContainer(iGMediaContainer);
+
+            string mediaContainerID = (await CreateMediaContainer(iGMediaContainer)).Id;
             await Task.Delay(1 * 1000 * delayBeforePublishingInSeconds); 
-            string mediaID = string.Empty;
+            string publishedMediaContainerID = string.Empty;
             try
             {
-                mediaID = await PublishMediaContainer();
-                return mediaID;
+                publishedMediaContainerID = await PublishMediaContainer(mediaContainerID);
+                return publishedMediaContainerID;
             }
             catch (Exception ex)
             {
                 logger.LogError($"An error occurred while waiting: {ex.Message}");
                 logger.LogInformation($"Trying again with another {delayBeforePublishingInSeconds} sec delay");
                 await Task.Delay(1 * 1000 * delayBeforePublishingInSeconds * 2); 
-                mediaID = await PublishMediaContainer();
-                return mediaID;
+                publishedMediaContainerID = await PublishMediaContainer(mediaContainerID);
+                return publishedMediaContainerID;
             }
         }
         // to implement later:
