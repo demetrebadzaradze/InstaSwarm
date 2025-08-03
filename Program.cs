@@ -50,9 +50,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+
+string[] igTokens = DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKENS")?.Split(',') ?? Array.Empty<string>();
 // Initialize InstagramAgent with tokens from environment variables
 InstagramAgent IGagent = new InstagramAgent(
-    DotNetEnv.Env.GetString("INSTAGRAM_USER_TOKENS")?.Split(',') ?? Array.Empty<string>(),
+    igTokens,
     DotNetEnv.Env.GetString("ADMIN_INSTAGRAM_USER_ID") ?? throw new InvalidOperationException("ADMIN_INSTAGRAM_USER_USERNAME is missing in environment variables"),
     loggerFactory
     );
