@@ -235,9 +235,14 @@ namespace InstaSwarm.services
                                 fullTitle),
                             100);
 
-                        return IGAggentResponce != string.Empty
-                            ? $"success: {IGAggentResponce}"
-                            : "Failed to post video on all accounts.";
+                        string result = string.Empty;
+
+                        if (String.IsNullOrEmpty(IGAggentResponce))
+                        {
+                            return "Failed to post video on all accounts.";
+                        }
+                        YtDlp.DeleteVideoFile(videoPath);
+                        return $"success: {IGAggentResponce}";
                     }
                 }
             }
