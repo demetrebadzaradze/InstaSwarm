@@ -3,6 +3,7 @@
 namespace InstaSwarm.services
 {
     //stuff to improve: each instagramclient class object has its own logger, but it would be better to have a single logger for the whole InstagramAgent class somohow.
+    //stuff to add: better logging, like sending messages to the admin user about the status of the video processing, like if it was successfully posted or not. 
     // <summary>
     //    Design Goals for InstagramAgent
     //    Coordinate Workflow: Manage the process of receiving video links, downloading, storing, and uploading to Instagram accounts.
