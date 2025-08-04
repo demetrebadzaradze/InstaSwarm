@@ -1,0 +1,18 @@
+services:
+  Instaswarm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_CONFIGURATION: Debug
+    container_name: Instaswarm
+    env_file:
+      - .env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ~/opt/video:/app/video
+    ports:
+      - "5000:8080"
+      - "5001:8081"
+    restart: on-failure
