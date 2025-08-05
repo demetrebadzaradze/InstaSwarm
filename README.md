@@ -1,4 +1,6 @@
 ## Instaswarm
+**are you waisting too much time scroling reels, well this tool is for you. turn your addiction into a adiction with slight benefits of getting views online, share funny videos to a bot and build up an creator account completely hands free, no more friends telling you to stop sending your entire fy. improve for better**
+
 **Instaswarm is an Instagram content publishing bot cluster, that can be managed from one account.** for now application is container based .NET app that has endpoint for Instagram webhook and based on that it uploads reels to multiple accounts.
 
 ## How does it works at its core
