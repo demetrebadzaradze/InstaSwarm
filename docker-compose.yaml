@@ -13,7 +13,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     volumes:
-      - ~/opt/video:/app/video
+      - /opt/video:/app/video # dont use .. and ~ to avoid permission issues 
     ports:
       - "5000:8080"
       - "5001:8081"
