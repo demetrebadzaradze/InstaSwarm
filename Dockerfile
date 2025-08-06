@@ -35,8 +35,11 @@ USER app
 
 VOLUME /app/video 
 
-# Copy the HTTPS certificate file into the container
-COPY https-dev.pfx /app/https-dev.pfx
+# Make HTTPS certificate in container
+RUN dotnet dev-certs https --export-path /app/https-dev.pfx --password '${HTTPS_CERT_PASSWORD}' &&
+  chown 1000:1000 /app/https-dev.pfx &&
+  chmod 644 /app/https-dev.pfx
+
 
 
 # This stage is used to build the service project
