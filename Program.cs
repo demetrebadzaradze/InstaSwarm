@@ -24,7 +24,7 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ListenAnyIP(8080); // HTTP
     options.ListenAnyIP(8081, listenOptions =>
     {
-        listenOptions.UseHttps("https-dev.pfx", DotNetEnv.Env.GetString("HTTPS_CERT_PASSWORD")); // Enable HTTPS
+        listenOptions.UseHttps("https-dev.pfx", "Instaswarm12345"); // Enable HTTPS
     });
 });
 

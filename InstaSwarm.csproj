@@ -6,9 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>d8f54eb6-e539-4220-80bb-413e80999440</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>.</DockerfileContext>
-	  <DockerfileBuildArguments>--build-arg HTTPS_CERT_PASSWORD=$(HTTPS_CERT_PASSWORD)</DockerfileBuildArguments>     
+    <DockerfileContext>.</DockerfileContext>    
     <Configurations>Debug;Release;test</Configurations>
+	<DockerfileTarget>final</DockerfileTarget>
   </PropertyGroup>
 
   <ItemGroup>

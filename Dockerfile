@@ -12,12 +12,9 @@ ARG UID=1000
 ARG GID=1000
 RUN usermod -u $UID app && groupmod -g $GID app
 
-# Install yt-dlp and dependencies as root.
-USER root
-# Install necessary packages and yt-dlp
-# i think we need python3, pip, curl, ffmpeg but it takes a lot of time to install so we might want to optimize this later
+# Install yt-dlp and dependencies as root
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 python3-pip curl ffmpeg && \
+    apt-get install -y --no-install-recommends python3 python3-pip curl ffmpeg libssl-dev && \
     curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
     chmod +x /usr/local/bin/yt-dlp && \
     /usr/local/bin/yt-dlp --version && \
@@ -33,13 +30,10 @@ RUN chown -R app /app
 
 USER app
 
-VOLUME /app/video 
+VOLUME /app/video
 
-# Make HTTPS certificate in container
-ARG HTTPS_CERT_PASSWORD
-RUN dotnet dev-certs https --export-path /app/https-dev.pfx --password '${HTTPS_CERT_PASSWORD}' && \
-    chown 1000:1000 /app/https-dev.pfx && \
-    chmod 644 /app/https-dev.pfx
+# Copy the HTTPS certificate file into the container
+COPY https-dev.pfx /app/https-dev.pfx
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -61,4 +55,4 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-ENTRYPOINT ["dotnet", "InstaSwarm.dll"] 
+ENTRYPOINT ["dotnet", "InstaSwarm.dll"]
