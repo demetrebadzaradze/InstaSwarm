@@ -1,4 +1,4 @@
-## Instaswarm
+# Instaswarm
 **are you wasting too much time scrolling reels well this tool is for you turn your addiction to an addiction into a addiction with slight benefits of getting views online, share funny videos to this bot and build up an creator account completely hands free, no more friends telling you to stop sending your entire fy. improve for better**
 
 **Instaswarm is an Instagram content publishing bot cluster, that can be managed from one account.** for now application is container based .NET app that has endpoint for Instagram webhook and based on that it uploads reels to multiple accounts.
@@ -116,10 +116,13 @@ ADMIN_INSTAGRAM_USER_ID=12456789
 according to [this](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-dev-certs)  dotnet can make the https certificate but if you don't have it run a container that app uses to run like this:
 ```bash
 docker run --rm -v "~/opt/certs:/output" mcr.microsoft.com/dotnet/sdk:8.0 bash -c "
-  dotnet dev-certs https --export-path /output/https-dev.pfx --password '<your strong password>' &&
-  chown 1000:1000 /output/https-dev.pfx &&
-  chmod 644 /output/https-dev.pfx
+Â  dotnet dev-certs https --export-path /output/https-dev.pfx --password '<your strong password>' &&
+Â  chown 1000:1000 /output/https-dev.pfx &&
+Â  chmod 644 /output/https-dev.pfx
 "
 ```
 replace the password and after running this it will make HTTPS certificate in ~/opt/certs directory i thing you can also enter the working directory here too and that will work too.
 after that move that certificate to the app redirect and enter password in `.env` file 
+
+## License
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](https://github.com/demetrebadzaradze/InstaSwarm/blob/master/LICENSE) file for details.
