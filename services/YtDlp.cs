@@ -176,6 +176,12 @@ namespace InstaSwarm.services
             {
                 throw new ArgumentException("Video name cannot be null or empty.", nameof(videoName));
             }
+            // if the name is too long trim it down to 100 characters
+            if (videoName.Length > 100)
+            {
+                videoName = videoName.Substring(0, 100);
+            }
+
             // Replace spaces with underscores and remove dots
             string correctedPath = videoName.Replace(" ", "_").Replace(".", "").ToLower();
 
