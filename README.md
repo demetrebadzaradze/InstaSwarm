@@ -25,9 +25,9 @@ git clone https://github.com/demetrebadzaradze/InstaSwarm.git
 ```
 and also have directory for videos, this must be outside of the project directory like:
 ```bash
-mkdir ../videos
-sudo chown 1000 ../videos
-chmod 777 ../videos
+mkdir -p ~/opt/video
+sudo chown 1000 ~/opt/video
+chmod -R 777 ~/opt/video
 ```
 make sure you own the directory and use proper permissions `777` might be overkill but this is what worked for me.
 
@@ -36,7 +36,7 @@ make sure you own the directory and use proper permissions `777` might be overki
 2. enable funnel. learn [here.](https://tailscale.com/kb/1223/funnel) 
 3. and funnel the needed videos directory path
 	```bash
-	tailscale funnel --bg "~/videos"
+	tailscale funnel --bg "~/opt/video"
 	```
 	and also the port where app is living (HTTPS port)
 	```bash
@@ -75,7 +75,7 @@ docker compose up -d
 	```
  - run
 	```bash
-	sudo docker run --rm --env-file .env -v ~/opt/videos:/app/video -p 5000:8080 -p 5001:8081 --name Instaswarm instaswarm
+	sudo docker run --rm --env-file .env -v ~/opt/video:/app/video -p 5000:8080 -p 5001:8081 --name Instaswarm instaswarm
 	```
 you can of course tweak this.
 
