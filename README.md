@@ -71,11 +71,11 @@ docker compose up -d
  or run with Dockerfile directly:
  - build
 	```bash
-	sudo docker build .
+	sudo docker build -t instaswarm .
 	```
  - run
 	```bash
-	sudo docker run --rm --env-file .env -v ~/opt/videos:/app/video -p 5000:8080 -p 5001:8081 --name Instaswarm <last container id from build command>
+	sudo docker run --rm --env-file .env -v ~/opt/videos:/app/video -p 5000:8080 -p 5001:8081 --name Instaswarm instaswarm
 	```
 you can of course tweak this.
 
