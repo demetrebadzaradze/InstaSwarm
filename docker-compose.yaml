@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        HTTPS_CERT_PASSWORD: ${HTTPS_CERT_PASSWORD}
         UID: ${UID:-1000}
         GID: ${GID:-1000}
         BUILD_CONFIGURATION: Debug
@@ -13,7 +14,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     volumes:
-      - /opt/video:/app/video # dont use .. and ~ to avoid permission issues 
+      - ${VIDEO_DOWNLOAD_PATH_ON_HOST}:/app/video
     ports:
       - "5000:8080"
       - "5001:8081"

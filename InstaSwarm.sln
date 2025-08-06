@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.11.35312.102
+VisualStudioVersion = 17.14.36301.6 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstaSwarm", "InstaSwarm.csproj", "{9EE3E04A-FEEF-4764-B0E7-A8653ACCFAD1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstaSwarm", "InstaSwarm.csproj", "{C5F7840E-C0A1-F6C0-94EC-5E1B684BC23F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,17 +12,17 @@ Global
 		test|Any CPU = test|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9EE3E04A-FEEF-4764-B0E7-A8653ACCFAD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9EE3E04A-FEEF-4764-B0E7-A8653ACCFAD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9EE3E04A-FEEF-4764-B0E7-A8653ACCFAD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9EE3E04A-FEEF-4764-B0E7-A8653ACCFAD1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9EE3E04A-FEEF-4764-B0E7-A8653ACCFAD1}.test|Any CPU.ActiveCfg = test|Any CPU
-		{9EE3E04A-FEEF-4764-B0E7-A8653ACCFAD1}.test|Any CPU.Build.0 = test|Any CPU
+		{C5F7840E-C0A1-F6C0-94EC-5E1B684BC23F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5F7840E-C0A1-F6C0-94EC-5E1B684BC23F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5F7840E-C0A1-F6C0-94EC-5E1B684BC23F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5F7840E-C0A1-F6C0-94EC-5E1B684BC23F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5F7840E-C0A1-F6C0-94EC-5E1B684BC23F}.test|Any CPU.ActiveCfg = test|Any CPU
+		{C5F7840E-C0A1-F6C0-94EC-5E1B684BC23F}.test|Any CPU.Build.0 = test|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {4D499882-EA54-47B2-AA84-AF2581F73494}
+		SolutionGuid = {6671CAB7-FD6B-43B9-85C0-06C662E54890}
 	EndGlobalSection
 EndGlobal
