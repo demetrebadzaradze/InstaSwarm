@@ -19,12 +19,14 @@ builder.Services.AddSwaggerGen();
 
 DotNetEnv.Env.Load();
 
+string certpassword = DotNetEnv.Env.GetString("HTTPS_CERT_PASSWORD") ?? "Instaswarm12345";
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(8080); // HTTP
     options.ListenAnyIP(8081, listenOptions =>
     {
-        listenOptions.UseHttps("https-dev.pfx", "Instaswarm12345"); // Enable HTTPS
+        listenOptions.UseHttps("https-dev.pfx", certpassword); // Enable HTTPS
     });
 });
 
