@@ -4,15 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        HTTPS_CERT_PASSWORD: ${HTTPS_CERT_PASSWORD}
         UID: ${UID:-1000}
         GID: ${GID:-1000}
-        BUILD_CONFIGURATION: Debug
     container_name: Instaswarm
     env_file:
       - .env
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
     volumes:
       - ${VIDEO_DOWNLOAD_PATH_ON_HOST}:/app/video
     ports:
