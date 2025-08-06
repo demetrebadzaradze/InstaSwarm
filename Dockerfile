@@ -7,6 +7,11 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
+USER root
+ARG UID=1000
+ARG GID=1000
+RUN usermod -u $UID app && groupmod -g $GID app
+
 # Install yt-dlp and dependencies as root.
 USER root
 # Install necessary packages and yt-dlp

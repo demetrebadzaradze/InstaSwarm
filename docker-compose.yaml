@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
         BUILD_CONFIGURATION: Debug
     container_name: Instaswarm
     env_file:
