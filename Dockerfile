@@ -37,7 +37,6 @@ VOLUME /app/video
 
 # Make HTTPS certificate in container
 ARG HTTPS_CERT_PASSWORD
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 RUN dotnet dev-certs https --export-path /app/https-dev.pfx --password '${HTTPS_CERT_PASSWORD}' && \
     chown 1000:1000 /app/https-dev.pfx && \
     chmod 644 /app/https-dev.pfx
