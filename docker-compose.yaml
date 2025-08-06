@@ -1,5 +1,5 @@
 services:
-  Instaswarm:
+  instaswarm:
     build:
       context: .
       dockerfile: Dockerfile
