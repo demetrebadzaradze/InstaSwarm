@@ -127,3 +127,7 @@ after that move that certificate to the app redirect and enter password in `.env
 
 ## License
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](https://github.com/demetrebadzaradze/InstaSwarm/blob/master/LICENSE) file for details.
+## Contributing
+Want to contribute? See our [Contributing Guidelines](https://github.com/demetrebadzaradze/InstaSwarm/blob/master/.github/CONTRIBUTING.md).
+## Code of Conduct
+Please read our [Code of Conduct]([https://github.com/demetrebadzaradze/InstaSwarm/blob/master/CODE_OF_CONDUCT.md) to understand the expectations for participation.
