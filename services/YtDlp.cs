@@ -168,6 +168,40 @@ namespace InstaSwarm.services
             }
         }
         /// <summary>
+        /// deletes video files acording to the count of them in a folder to alwait keep latest 5 videos
+        /// </summary>
+        public bool DeleteOldVideos(string directoryPath, int keepCount = 5)
+        {
+            logger.BeginScope($"YtDlp.DeleteOldVideos: ");
+            logger.LogInformation($"DeleteOldVideos: directoryPath={directoryPath}, keepCount={keepCount}");
+            try
+            {
+                if (!Directory.Exists(directoryPath))
+                {
+                    logger.LogError($"Directory not found: {directoryPath}");
+                    return false;
+                }
+                var videoFiles = Directory.GetFiles(directoryPath, "*.mp4").OrderByDescending(f => File.GetCreationTime(f)).ToList();
+                if (videoFiles.Count <= keepCount)
+                {
+                    logger.LogInformation($"No old videos to delete. Current count: {videoFiles.Count}, Keep count: {keepCount}");
+                    return true;
+                }
+                for (int i = keepCount; i < videoFiles.Count; i++)
+                {
+                    File.Delete(videoFiles[i]);
+                    logger.LogInformation($"Deleted old video: {videoFiles[i]}");
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Error deleting old videos: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// methid that will get a string that will be used as a path to the video file and will return the path but with corected format like no spaces and no dots
         /// </summary>
         public string CorrectVideoNameFormat(string videoName)
