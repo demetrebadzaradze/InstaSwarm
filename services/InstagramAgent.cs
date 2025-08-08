@@ -242,7 +242,9 @@ namespace InstaSwarm.services
                         {
                             return "Failed to post video on all accounts.";
                         }
-                        YtDlp.DeleteVideoFile(videoPath);
+
+                        string videosDirectory = videoPath.Replace($"{title}.mp4", "");
+                        ytDlp.DeleteOldVideos(videosDirectory);
                         return $"success: {IGAggentResponce}";
                     }
                 }
