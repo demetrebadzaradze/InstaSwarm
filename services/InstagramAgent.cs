@@ -54,7 +54,7 @@ namespace InstaSwarm.services
             string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"", ""));
             string publicVideoURL = $"{PublicBaseURL}{EncodedvideoPath}";
 
-            foreach (InstagramClient client in Clients)
+            foreach (InstagramClient client in Clients!)
             {
                 string containerId = await client.PostMedia(
                     new InstagramMediaContainer(
@@ -84,11 +84,19 @@ namespace InstaSwarm.services
                 throw new ArgumentException("in media container Video link(MediaUrl) cannot be null or empty, in the InstagramAgent.PostToAllAcounts", nameof(mediaContainer.MediaUrl));
             }
 
-
             string result = string.Empty;
 
-            foreach (var client in Clients)
+            foreach (var client in Clients!)
             {
+                if (await client.HasEnoughPublishesLeftForToday())
+                {
+                    logger.LogInformation($"Client {client.User.Username} has enough publishes left for today.");
+                }
+                else
+                {
+                    logger.LogWarning($"Client {client.User.Username} has no publishes left for today, skipping posting.");
+                    continue; // Skip posting if the client has no publishes left for today
+                }
                 result += $"Posting to account: {client.User.Username}\n";
                 string responce = await client.PostMedia(mediaContainer, delayBeforePublishingInSeconds);
                 result += responce != string.Empty ? $"Posted successfully with container ID: {responce}\n" : $"Failed to post on account: {client.User.Username}\n";
@@ -140,11 +148,11 @@ namespace InstaSwarm.services
                 return false;
             }
             Uri uriResult;
-            bool result = Uri.TryCreate(videoLink, UriKind.Absolute, out uriResult)
+            bool result = Uri.TryCreate(videoLink, UriKind.Absolute, out uriResult!)
                           && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
             if (result)
             {
-                cleanLink = $"{uriResult.Scheme}://{uriResult.Host}{uriResult.AbsolutePath}";
+                cleanLink = $"{uriResult!.Scheme}://{uriResult.Host}{uriResult.AbsolutePath}";
                 return result;
             }
             cleanLink = "";

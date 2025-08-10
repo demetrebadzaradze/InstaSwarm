@@ -96,6 +96,25 @@ namespace InstaSwarm.services
             }
             return -1; // Default return value in case of failure
         }
+
+        /// <summary>
+        /// this method will return true is the user has enough publishes left for today and false otherwise
+        /// </summary>
+        public async Task<bool> HasEnoughPublishesLeftForToday(int publishesCount = 1)
+        {
+            logger.BeginScope("InstagramClient.HasEnoughPublishesLeftForToday: ");
+            logger.LogInformation($"Checking if user {User.Username} has enough publishes left for today. Required: {publishesCount}");
+            int availablePublishes = await GetAvalableContentPublishesCount();
+            if (availablePublishes < 0)
+            {
+                logger.LogError("Failed to retrieve available publishes count.");
+                return false;
+            }
+            bool hasEnough = availablePublishes >= publishesCount;
+            logger.LogInformation($"User {User.Username} has enough publishes left: {hasEnough} | amount: {availablePublishes}");
+            return hasEnough;
+        }
+
         public async Task<InstagramMediaContainer> CreateMediaContainer(InstagramMediaContainer iGMediaContainer)
         {
             logger.BeginScope("InstagramClient.CreateMediaContainer: ");
