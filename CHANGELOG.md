@@ -1,3 +1,8 @@
+# [0.2.1] - 2025-08-15
+## Added 
+- Enhanced info looging: now includes amount of used and avalable published for each account.
+- added new feature to use sent text as a caption for the video.
+
 # [0.2.0] - 2025-08-08
 ## Added
 - Video retention feature: Now saves the five most recent videos and deletes older ones instead of deleting all videos.

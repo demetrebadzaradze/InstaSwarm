@@ -230,7 +230,7 @@ namespace InstaSwarm.services
                         }
 
                         // in future if text sent is not null use it as a caption but reuse the tags from the title.
-                        string fullTitle = attachment.Payload.Title ?? entry.Time.ToString();
+                        string fullTitle = attachment.Payload.Title ?? text ?? entry.Time.ToString();
                         string firstLine = fullTitle.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
                         string title = ytDlp.CorrectVideoNameFormat(firstLine);
                         string videoURL = attachment.Payload.Url;
@@ -288,46 +288,3 @@ namespace InstaSwarm.services
         }
     }
 }
-
-
-/* var messaging = entry.Messaging[0];
-                string senderID = messaging.Sender;
-                var recipient = messaging.Recipient;
-                if (senderID == null || recipient == null)
-                {
-                    logger.LogWarning("Sender or recipient information is missing in the webhook entry.");
-                    continue;
-                }
-                if (!IsMessageFromAdmin(webhook) || !IsUniqueWebhookFromAdmin(webhook))
-                {
-                    logger.LogInformation("Message is not from admin or is not unique, skipping processing.");
-                    continue;
-                }
-                string videoLink = ExtractVideoLinkFromMessage(messaging.Message.Text);
-                if (string.IsNullOrEmpty(videoLink))
-                {
-                    logger.LogInformation("No valid video link found in the message text.");
-                    continue;
-                }
-                string fullTitle = messaging.Message.Attachments?[0].Payload.Title ?? entry.Time.ToString();
-                string title = ytDlp.CorrectVideoNameFormat(fullTitle.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0]);
-                
-                string videoPath = ytDlp.DownloadVideo(videoLink, $"video/{title}.mp4").Replace("video/", "");
-                
-                if (string.IsNullOrEmpty(videoPath))
-                {
-                    logger.LogInformation("Video is already in the queue or download failed.");
-                    return "Video is already in the queue or download failed.";
-                }
-                string EncodedvideoPath = Uri.EscapeDataString(videoPath.Replace("\"", ""));
-                
-                string IGAggentResponce = await PostToAllAccounts(
-                    new InstagramMediaContainer(
-                        InstagramMediaType.REELS,
-                        $"{PublicBaseURL}{videoPath}",
-                        fullTitle), 100);
-                YtDlp.DeleteVideoFile($"video/{videoPath}");
-                
-                return IGAggentResponce;
-
-*/
