@@ -1,6 +1,6 @@
 # Instaswarm
 ![GPL License](https://img.shields.io/badge/License-GPLv3-blue.svg)
-**are you wasting too much time scrolling reels well this tool is for you turn your addiction to an addiction into a addiction with slight benefits of getting views online, share funny videos to this bot and build up an creator account completely hands free, no more friends telling you to stop sending your entire FYP. improve for better**
+**are you wasting too much time scrolling reels, well this tool is for you, turn your addiction into an addiction with slight benefits of getting views online, share funny videos to this bot and build up an creator account completely hands free, no more friends telling you to stop sending your entire FYP. improve for better**
 
 **InstaSwarm is a .NET-based Docker container application that automates posting Instagram Reels across multiple accounts**. Share reels with the admin account via Instagram, and the bot downloads, processes, and uploads them to managed accounts, helping creators grow their audience hands-free.
 
