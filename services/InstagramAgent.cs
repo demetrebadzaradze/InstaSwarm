@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore;
+using System;
 
 namespace InstaSwarm.services
 {
@@ -229,8 +230,7 @@ namespace InstaSwarm.services
                             continue; // Skip processing if the attachment is not a Reel
                         }
 
-                        // in future if text sent is not null use it as a caption but reuse the tags from the title.
-                        string fullTitle = attachment.Payload.Title ?? text ?? entry.Time.ToString();
+                        string fullTitle = DetermineCaption(text, attachment.Payload.Title, entry.Time);
                         string firstLine = fullTitle.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
                         string title = ytDlp.CorrectVideoNameFormat(firstLine);
                         string videoURL = attachment.Payload.Url;
@@ -259,7 +259,52 @@ namespace InstaSwarm.services
             }
             return "webhook processing finished";
         }
+        /// <summary>
+        ///     this method determines caption based on arguments, if taxt sent is null or empty it will use the title of the video,
+        ///     if not it will use the text as a caption plus the tags extracted from the video caption,
+        ///     and if none are present use timestamp of the video as a caption.
+        /// </summary>
+        public string DetermineCaption(string? text, string videoTitle, long videoTimestamp)
+        {
+            if (!string.IsNullOrEmpty(text))
+            {
+                return $"{text} {String.Join(" ", ExtractTags(videoTitle))}";
+            }
+            else if (!string.IsNullOrEmpty(videoTitle))
+            {
+                return videoTitle;
+            }
+            else
+            {
+                DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(videoTimestamp);
+                DateTime dateTimeLocal = dateTimeOffset.LocalDateTime;
+                return $"Video uploaded at {dateTimeLocal:yyyy-MM-dd HH:mm:ss}";
+            }
+        }
 
+
+        /// <summary>
+        ///    this method extracts tags from the video caption or any string.
+        ///    tags are considered to be words that start with a hash (#) symbol.
+        ///    the tags are returned as a list of strings. so use join to combine them into a single string.
+        /// </summary>
+        public List<string> ExtractTags(string caption)
+        {
+            if (string.IsNullOrEmpty(caption))
+            {
+                return new List<string>();
+            }
+            List<string> tags = new List<string>();
+            string[] words = caption.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string word in words)
+            {
+                if (word.StartsWith("#"))
+                {
+                    tags.Add(word.Trim());
+                }
+            }
+            return tags;
+        }
         private bool IsMessageFromAdmin(InstagramWebhook webhook)
         {
             if (webhook.Entry == null || webhook.Entry.Count == 0)
