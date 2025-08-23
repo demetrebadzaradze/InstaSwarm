@@ -55,7 +55,7 @@ namespace InstaSwarm.services
                     if (e.Data != null) output.AppendLine(e.Data);
                     if (e.Data.StartsWith("[Merger] Merging formats into "))    //  this kinda got deleted, but I will keep it for now
                     {
-                            destination = e.Data.Substring("[Merger] Merging formats into ".Length).Trim();
+                        destination = e.Data.Substring("[Merger] Merging formats into ".Length).Trim();
                     }
                     //  [download] Destination: video / Video by ittybitinggs.mp4
                     if (e.Data.StartsWith("[download] Destination: "))
@@ -67,7 +67,7 @@ namespace InstaSwarm.services
                     else if (e.Data.StartsWith("[download] ") && e.Data.Contains(" has already been downloaded"))
                     {
                         logger.LogInformation($"Video already downloaded: {e.Data}");
-                        destination = string.Empty;
+                        destination = e.Data.Replace("[download] ", "").Replace(" has already been downloaded", "");
                     }
                 };
                 process.ErrorDataReceived += (sender, e) => { if (e.Data != null) error.AppendLine(e.Data); };
