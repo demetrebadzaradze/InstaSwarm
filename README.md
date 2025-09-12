@@ -29,7 +29,10 @@
 	sudo chown 1000 ~/opt/video
 	chmod -R 777 ~/opt/video
 	```
-3. Follow the Setup Guides for Tailscale [[Instaswarm#Tailscale Guide]], Meta app [[Instaswarm#Meta app Guide]], and .env configuration [[Instaswarm#.ENV guide]].
+3. Follow the Setup Guide for [Tailscale](#tailscale-guide)
+4. Follow the Setup Guide for  [Meta app](#meta-app-guide),
+5. Follow the Setup Guide for [.env configuration](#env-guide).
+6. Follow the Setup Guide for [cookies](#adding-cookies-to-cookiestxt)
 
 ## Running the app
 app does comes with `compose.yaml` file you can either run that:
@@ -111,7 +114,18 @@ VIDEO_DOWNLOAD_PATH_ON_HOST=C:\Users\TG\Pictures\share
 	```bash
 	docker logs <container name>
 	```
-8. `VIDEO_DOWNLOAD_PATH_ON_HOST` is where will the videos be saved temporally on host machine, this should be same that was funneled with Tailscale and this also must be an absolute path. 
+8. `VIDEO_DOWNLOAD_PATH_ON_HOST` is where will the videos be saved temporally on host machine, this should be same that was funneled with Tailscale and this also must be an absolute path.
+
+## Adding Cookies to `cookies.txt`
+Certain features of the InstaSwarm application require Instagram cookies to function properly. To enable these features, create a file named `cookies.txt` in the project directory and populate it with the necessary Instagram cookies.
+
+### How to Obtain Instagram Cookies
+The simplest way to retrieve Instagram cookies is by using a browser extension such as [Get Cookies.txt Locally](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc?hl=en-US&utm_source=ext_sidebar) for Google Chrome. Similar extensions are available for other browsers. Follow these steps:
+
+1. Install the browser extension.
+2. Log in to Instagram using the target account.
+3. Use the extension to export the cookies.
+4. Copy the exported cookies and paste them into the `cookies.txt` file in the InstaSwarm project directory.
 
 ## Make your own HTTPS certificate (optional but recommended)
 according to [this](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-dev-certs)  dotnet can make the https certificate but if you don't have it run a container that app uses to run like this:
