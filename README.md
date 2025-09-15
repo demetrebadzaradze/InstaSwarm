@@ -1,7 +1,7 @@
 # Instaswarm
 ![GPL License](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
-**are you wasting too much time scrolling reels, well this tool is for you, turn your addiction into an addiction with slight benefits of getting views online, share funny videos to this bot and build up an creator account completely hands free, no more friends telling you to stop sending your entire FYP. improve for better**
+**Are you wasting too much time scrolling reels, well this tool is for you, turn your addiction into an addiction with slight benefits of getting views online, share funny videos to this bot and build up an creator account completely hands free, no more friends telling you to stop sending your entire FYP. improve for better**
 
 **InstaSwarm is a .NET-based Docker container application that automates posting Instagram Reels across multiple accounts**. Share reels with the admin account via Instagram, and the bot downloads, processes, and uploads them to managed accounts, helping creators grow their audience hands-free.
 
@@ -23,7 +23,7 @@
 	```bash
 	git clone https://github.com/demetrebadzaradze/InstaSwarm.git
 	``` 
-2. create directory for videos, this must be outside of the project directory:
+2. Create directory for videos, this must be outside of the project directory:
 	```bash
 	mkdir -p ~/opt/video
 	sudo chown 1000 ~/opt/video
@@ -35,7 +35,7 @@
 6. Follow the Setup Guide for [cookies](#adding-cookies-to-cookiestxt)
 
 ## Running the app
-app does comes with `compose.yaml` file you can either run that:
+App does comes with `compose.yaml` file you can either run that:
 ```bash
 docker compose up -d
 ```
@@ -48,16 +48,16 @@ docker compose up -d
 	```bash
 	sudo docker run --rm --env-file .env -v /home/<username>/opt/video:/app/video -p 5000:8080 -p 5001:8081 --name Instaswarm instaswarm
 	```
-you can of course tweak this.
+You can of course tweak this.
 
 ## Usage
 	 
 Send a reel to the admin Instagram account(one that has webhooks configured) via direct message. The bot will download, process, and upload the reel to all managed accounts.
 
 ### Tailscale Guide
-1. download it from [here](https://tailscale.com/download/linux) and go thru setup process.
-2. enable funnel. learn [here.](https://tailscale.com/kb/1223/funnel) 
-3. and funnel the needed videos directory path
+1. Download it from [here](https://tailscale.com/download/linux) and go thru setup process.
+2. Enable funnel. learn [here.](https://tailscale.com/kb/1223/funnel) 
+3. Funnel the needed videos directory path
 	```bash
 	tailscale funnel --bg "~/opt/video"
 	```
@@ -67,8 +67,8 @@ Send a reel to the admin Instagram account(one that has webhooks configured) via
 	```
 	
 ### Meta app Guide
-1. for this go over to [Facebook for developer website](https://developers.facebook.com/) and sign up.
-2. make and [app](https://developers.facebook.com/apps/)
+1. For this go over to [Facebook for developer website](https://developers.facebook.com/) and sign up.
+2. Make and [app](https://developers.facebook.com/apps/)
 	- name it and enter your E-mal.
 	- is use case chouse `other`.
 	- app type `business`.
@@ -84,7 +84,7 @@ Send a reel to the admin Instagram account(one that has webhooks configured) via
 - also set the `App Mode` to `Live`
 
 ## .ENV guide
-in this project environmental variables are most important thing for app to work. `.env.example` is the example file and it will look something like this(with small descriptions):
+In this project environmental variables are most important thing for app to work. `.env.example` is the example file and it will look something like this(with small descriptions):
 ```env
 INSTAGRAM_USER_TOKENS=IGJHHTDMHNBVMHY, more...	 
 YTDLP_PATH=
