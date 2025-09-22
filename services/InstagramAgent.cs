@@ -43,10 +43,26 @@ namespace InstaSwarm.services
             logger.BeginScope($"InstagramAgent.InitializeAdmin: ");
             logger.LogInformation($"Initializing Admin...");
 
-            AdminUser = await Clients![0].InitializeUserInfo(
+            foreach (InstagramClient client in Clients!)
+            {
+                AdminUser = await client.InitializeUserInfo(
                     UserID: AdminInstagramID,
                     creatorOnlyPropsToget: ""
                     );
+
+                if (AdminUser != InstagramUser.Error)
+                {
+                    logger.LogInformation($"Admin user initialized successfully with client {client.User.Username}. Admin Username: {AdminUser.Username}, ID: {AdminUser.ID}");
+                    break;
+                }
+                logger.LogWarning($"Failed to initialize Admin user with client {client.User.Username}. Trying next client if available.");
+            }
+
+            if (AdminUser == InstagramUser.Error)
+            {
+                logger.LogError("Failed to initialize Admin user with all provided clients. Validate user tokens here https://developers.facebook.com/tools/debug/accesstoken/.");
+                throw new Exception("Failed to initialize Admin user with all provided clients. Validate user tokens here https://developers.facebook.com/tools/debug/accesstoken/.");
+            }
         }
         public async Task<string> PublishVideoFromLink(string videoLink, string caption, YtDlp ytDlp)
         {
