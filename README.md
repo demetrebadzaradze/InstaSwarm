@@ -1,6 +1,7 @@
 # Instaswarm
 ![GPL License](https://img.shields.io/badge/License-GPLv3-blue.svg)
-**are you wasting too much time scrolling reels, well this tool is for you, turn your addiction into an addiction with slight benefits of getting views online, share funny videos to this bot and build up an creator account completely hands free, no more friends telling you to stop sending your entire FYP. improve for better**
+
+**Are you wasting too much time scrolling reels, well this tool is for you, turn your addiction into an addiction with slight benefits of getting views online, share funny videos to this bot and build up an creator account completely hands free, no more friends telling you to stop sending your entire FYP. improve for better**
 
 **InstaSwarm is a .NET-based Docker container application that automates posting Instagram Reels across multiple accounts**. Share reels with the admin account via Instagram, and the bot downloads, processes, and uploads them to managed accounts, helping creators grow their audience hands-free.
 
@@ -22,16 +23,19 @@
 	```bash
 	git clone https://github.com/demetrebadzaradze/InstaSwarm.git
 	``` 
-2. create directory for videos, this must be outside of the project directory:
+2. Create directory for videos, this must be outside of the project directory:
 	```bash
 	mkdir -p ~/opt/video
 	sudo chown 1000 ~/opt/video
 	chmod -R 777 ~/opt/video
 	```
-3. Follow the Setup Guides for Tailscale [[Instaswarm#Tailscale Guide]], Meta app [[Instaswarm#Meta app Guide]], and .env configuration [[Instaswarm#.ENV guide]].
+3. Follow the Setup Guide for [Tailscale](#tailscale-guide)
+4. Follow the Setup Guide for  [Meta app](#meta-app-guide),
+5. Follow the Setup Guide for [.env configuration](#env-guide).
+6. Follow the Setup Guide for [cookies](#adding-cookies-to-cookiestxt)
 
 ## Running the app
-app does comes with `compose.yaml` file you can either run that:
+App does comes with `compose.yaml` file you can either run that:
 ```bash
 docker compose up -d
 ```
@@ -44,16 +48,16 @@ docker compose up -d
 	```bash
 	sudo docker run --rm --env-file .env -v /home/<username>/opt/video:/app/video -p 5000:8080 -p 5001:8081 --name Instaswarm instaswarm
 	```
-you can of course tweak this.
+You can of course tweak this.
 
 ## Usage
 	 
 Send a reel to the admin Instagram account(one that has webhooks configured) via direct message. The bot will download, process, and upload the reel to all managed accounts.
 
 ### Tailscale Guide
-1. download it from [here](https://tailscale.com/download/linux) and go thru setup process.
-2. enable funnel. learn [here.](https://tailscale.com/kb/1223/funnel) 
-3. and funnel the needed videos directory path
+1. Download it from [here](https://tailscale.com/download/linux) and go thru setup process.
+2. Enable funnel. learn [here.](https://tailscale.com/kb/1223/funnel) 
+3. Funnel the needed videos directory path
 	```bash
 	tailscale funnel --bg "~/opt/video"
 	```
@@ -63,8 +67,8 @@ Send a reel to the admin Instagram account(one that has webhooks configured) via
 	```
 	
 ### Meta app Guide
-1. for this go over to [Facebook for developer website](https://developers.facebook.com/) and sign up.
-2. make and [app](https://developers.facebook.com/apps/)
+1. For this go over to [Facebook for developer website](https://developers.facebook.com/) and sign up.
+2. Make and [app](https://developers.facebook.com/apps/)
 	- name it and enter your E-mal.
 	- is use case chouse `other`.
 	- app type `business`.
@@ -80,7 +84,7 @@ Send a reel to the admin Instagram account(one that has webhooks configured) via
 - also set the `App Mode` to `Live`
 
 ## .ENV guide
-in this project environmental variables are most important thing for app to work. `.env.example` is the example file and it will look something like this(with small descriptions):
+In this project environmental variables are most important thing for app to work. `.env.example` is the example file and it will look something like this(with small descriptions):
 ```env
 INSTAGRAM_USER_TOKENS=IGJHHTDMHNBVMHY, more...	 
 YTDLP_PATH=
@@ -110,7 +114,18 @@ VIDEO_DOWNLOAD_PATH_ON_HOST=C:\Users\TG\Pictures\share
 	```bash
 	docker logs <container name>
 	```
-8. `VIDEO_DOWNLOAD_PATH_ON_HOST` is where will the videos be saved temporally on host machine, this should be same that was funneled with Tailscale and this also must be an absolute path. 
+8. `VIDEO_DOWNLOAD_PATH_ON_HOST` is where will the videos be saved temporally on host machine, this should be same that was funneled with Tailscale and this also must be an absolute path.
+
+## Adding Cookies to `cookies.txt`
+Certain features of the InstaSwarm application require Instagram cookies to function properly. To enable these features, create a file named `cookies.txt` in the project directory and populate it with the necessary Instagram cookies.
+
+### How to Obtain Instagram Cookies
+The simplest way to retrieve Instagram cookies is by using a browser extension such as [Get Cookies.txt Locally](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc?hl=en-US&utm_source=ext_sidebar) for Google Chrome. Similar extensions are available for other browsers. Follow these steps:
+
+1. Install the browser extension.
+2. Log in to Instagram using the target account.
+3. Use the extension to export the cookies.
+4. Copy the exported cookies and paste them into the `cookies.txt` file in the InstaSwarm project directory.
 
 ## Make your own HTTPS certificate (optional but recommended)
 according to [this](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-dev-certs)  dotnet can make the https certificate but if you don't have it run a container that app uses to run like this:
