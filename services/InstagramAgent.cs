@@ -248,10 +248,8 @@ namespace InstaSwarm.services
                             continue; // Skip processing if the attachment is not a Reel
                         }
 
-                        string fullTitle = DetermineCaption(text, attachment.Payload.Title, entry.Time);
-                        string translatedTitle = (fullTitle);
-                        string firstLine = fullTitle.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
-                        string title = ytDlp.CorrectVideoNameFormat(firstLine);
+                        string fullTitle = await ProcessCaption(text, attachment.Payload.Title, entry.Time);
+                        string title = ytDlp.CorrectVideoNameFormat(fullTitle);
                         string videoURL = attachment.Payload.Url;
                         string videoPath = ytDlp.DownloadVideo(videoURL, $"video/{title}.mp4")
                             ?? throw new Exception("error while downloading the video for upload\nHINT probably cookie problem");

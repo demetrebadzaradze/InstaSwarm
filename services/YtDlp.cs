@@ -206,9 +206,19 @@ namespace InstaSwarm.services
         /// </summary>
         public string CorrectVideoNameFormat(string videoName)
         {
+            videoName = videoName.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
             if (string.IsNullOrEmpty(videoName))
             {
-                throw new ArgumentException("Video name cannot be null or empty.", nameof(videoName));
+                logger.LogWarning("Video name is null or empty. Using default name 'video_<counter>'.");
+                int counter = 1;
+                string finalName = "video_0";
+                while (File.Exists(finalName))
+                {
+                    finalName = $"video_{counter}";
+                    counter++;
+                }
+
+                return finalName;
             }
             // if the name is too long trim it down to 100 characters
             if (videoName.Length > 100)
