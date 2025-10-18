@@ -147,7 +147,7 @@ app.MapGet("/webhook/instagram", (
 
 // TODO : add proper error handling and logging
 // TODO : also add a way to handle multiple messages in the same webhook call or webhook mesages managment and using its other values to simplify the code
-app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>   // use HttpContext fro debuging and better understanding of the request
+app.MapPost("/webhook/instagram", async (InstagramWebhook webhook) =>   // use HttpContext for debuging and better understanding of the request
 {
     try
     {

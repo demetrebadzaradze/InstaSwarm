@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using System;
+using System.Text.RegularExpressions;
+using System.Threading.RateLimiting;
 
 namespace InstaSwarm.services
 {
@@ -247,6 +249,7 @@ namespace InstaSwarm.services
                         }
 
                         string fullTitle = DetermineCaption(text, attachment.Payload.Title, entry.Time);
+                        string translatedTitle = (fullTitle);
                         string firstLine = fullTitle.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
                         string title = ytDlp.CorrectVideoNameFormat(firstLine);
                         string videoURL = attachment.Payload.Url;
@@ -259,8 +262,6 @@ namespace InstaSwarm.services
                                 $"{PublicBaseURL}{videoPath.Replace("video/", "")}",
                                 fullTitle),
                             100);
-
-                        string result = string.Empty;
 
                         if (String.IsNullOrEmpty(IGAggentResponce))
                         {
@@ -345,6 +346,69 @@ namespace InstaSwarm.services
             if (_uniqueMessagingMIDs!.Count > MaxUniqueWebhookTimes)
             {
                 _uniqueMessagingMIDs.Dequeue();
+            }
+        }
+        private async Task<string> ProcessCaption(string? text, string videoTitle, long videoTimestamp)
+        {
+            if (!string.IsNullOrEmpty(text))
+            {
+                return $"{text} {String.Join(" ", ExtractTags(videoTitle))}";
+            }
+            else if (!string.IsNullOrEmpty(videoTitle))
+            {
+                string[] words = videoTitle.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                List<string> tags = new List<string>();
+                List<string> mentions = new List<string>();
+
+                for (int i = 0; i < words.Length; i++)
+                {
+                    string word = words[i];
+                    // Process each word to extract tags or mentions
+
+                    if (word[0] == '#')     // tag found
+                    {
+                        tags.Add(word);
+                        word = $"#";
+                    }
+                    else if (word[0] == '@') // mention found
+                    {
+                        mentions.Add(word);
+                        word = $"@";
+                    }
+
+                    words[i] = word;
+                }
+
+                string filteredTitle = string.Join(" ", words);
+
+                string filteredTranslatedTitle = await Ftapi.TranslateText(filteredTitle);
+                string[] newTitleWords = filteredTranslatedTitle.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                int mentionsIndex = 0;
+                int tagsIndex = 0;
+
+                for (int i = 0; i < newTitleWords.Length; i++)
+                {
+                    if (newTitleWords[i] == "@")
+                    {
+                        newTitleWords[i] = mentions.Count > 0 ? mentions[mentionsIndex] : newTitleWords[i];
+                        mentionsIndex++;
+                    }
+                    if(newTitleWords[i] == "#")
+                    {
+                        newTitleWords[i] = tags.Count > 0 ? tags[tagsIndex] : newTitleWords[i];
+                        tagsIndex++;
+                    }
+                }
+
+                string finalCaption = string.Join(" ", newTitleWords);
+
+                return filteredTitle;
+            }
+            else
+            {
+                DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(videoTimestamp);
+                DateTime dateTimeLocal = dateTimeOffset.LocalDateTime;
+                return $"Video uploaded at {dateTimeLocal:yyyy-MM-dd HH:mm:ss}";
             }
         }
     }
