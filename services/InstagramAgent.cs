@@ -26,6 +26,8 @@ namespace InstaSwarm.services
         public InstagramUser AdminUser { get; set; } = new();
         public string PublicBaseURL { get; set; }
         public List<InstagramClient>? Clients { get; set; } = new List<InstagramClient>();
+        private static readonly char[] separator = [' ', '\r', '\n' ];
+
         public InstagramAgent(string[] tokens, string AdminInstagramID, ILoggerFactory loggerFactory1)
         {
             logger = loggerFactory1.CreateLogger<InstagramAgent>();
@@ -307,10 +309,10 @@ namespace InstaSwarm.services
         {
             if (string.IsNullOrEmpty(caption))
             {
-                return new List<string>();
+                return [];
             }
             List<string> tags = new List<string>();
-            string[] words = caption.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] words = caption.Split(separator, StringSplitOptions.RemoveEmptyEntries);
             foreach (string word in words)
             {
                 if (word.StartsWith("#"))
@@ -356,7 +358,7 @@ namespace InstaSwarm.services
             }
             else if (!string.IsNullOrEmpty(videoTitle))
             {
-                string[] words = videoTitle.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] words = videoTitle.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                 Queue<string> tags = new();
                 Queue<string> mentions = new();
 
@@ -385,7 +387,7 @@ namespace InstaSwarm.services
                 string filteredTranslatedTitle = await Ftapi.TranslateText(filteredTitle);
                 logger.LogInformation($"Translation result: {filteredTranslatedTitle}");
 
-                string[] newTitleWords = filteredTranslatedTitle.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] newTitleWords = filteredTranslatedTitle.Split(separator, StringSplitOptions.RemoveEmptyEntries);
 
                 for (int i = 0; i < newTitleWords.Length; i++)
                 {
