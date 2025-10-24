@@ -348,6 +348,8 @@ namespace InstaSwarm.services
         }
         private async Task<string> ProcessCaption(string? text, string videoTitle, long videoTimestamp)
         {
+            logger.BeginScope($"InstagramAgent.ProcessCaption: ");
+            logger.LogInformation($"Processing caption for video titled: {videoTitle}");
             if (!string.IsNullOrEmpty(text))
             {
                 return $"{text} {String.Join(" ", ExtractTags(videoTitle))}";
@@ -379,7 +381,10 @@ namespace InstaSwarm.services
 
                 string filteredTitle = string.Join(" ", words);
 
+                logger.LogInformation($"Translating captions: {filteredTitle}");
                 string filteredTranslatedTitle = await Ftapi.TranslateText(filteredTitle);
+                logger.LogInformation($"Translation result: {filteredTranslatedTitle}");
+
                 string[] newTitleWords = filteredTranslatedTitle.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 int mentionsIndex = 0;
                 int tagsIndex = 0;
