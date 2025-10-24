@@ -357,8 +357,8 @@ namespace InstaSwarm.services
             else if (!string.IsNullOrEmpty(videoTitle))
             {
                 string[] words = videoTitle.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                List<string> tags = new List<string>();
-                List<string> mentions = new List<string>();
+                Queue<string> tags = new();
+                Queue<string> mentions = new();
 
                 for (int i = 0; i < words.Length; i++)
                 {
@@ -367,12 +367,12 @@ namespace InstaSwarm.services
 
                     if (word[0] == '#')     // tag found
                     {
-                        tags.Add(word);
+                        tags.Enqueue(word);
                         word = $"#";
                     }
                     else if (word[0] == '@') // mention found
                     {
-                        mentions.Add(word);
+                        mentions.Enqueue(word);
                         word = $"@";
                     }
 
@@ -386,26 +386,22 @@ namespace InstaSwarm.services
                 logger.LogInformation($"Translation result: {filteredTranslatedTitle}");
 
                 string[] newTitleWords = filteredTranslatedTitle.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                int mentionsIndex = 0;
-                int tagsIndex = 0;
 
                 for (int i = 0; i < newTitleWords.Length; i++)
                 {
                     if (newTitleWords[i] == "@")
                     {
-                        newTitleWords[i] = mentions.Count > 0 ? mentions[mentionsIndex] : newTitleWords[i];
-                        mentionsIndex++;
+                        newTitleWords[i] = mentions.Count > 0 ? mentions.Dequeue() : newTitleWords[i];
                     }
                     if(newTitleWords[i] == "#")
                     {
-                        newTitleWords[i] = tags.Count > 0 ? tags[tagsIndex] : newTitleWords[i];
-                        tagsIndex++;
+                        newTitleWords[i] = tags.Count > 0 ? tags.Dequeue() : newTitleWords[i];
                     }
                 }
 
                 string finalCaption = string.Join(" ", newTitleWords);
 
-                return filteredTitle;
+                return finalCaption;
             }
             else
             {
