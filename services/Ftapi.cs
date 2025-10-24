@@ -28,7 +28,7 @@ namespace InstaSwarm.services
         }
         private static void InitializedHttpClient()
         {
-            _httpClient.BaseAddress = new Uri("https://ftapi.pythonanywhere.com/");
+            _httpClient.BaseAddress = new Uri("https://ftapi.pythonanywhere.com/");  // not an public api just for demos, host this on your own server if you need it.
             _httpClient.Timeout = TimeSpan.FromSeconds(30);
         }
         /// <summary>
