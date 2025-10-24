@@ -10,7 +10,11 @@ namespace InstaSwarm.services
     {
         private static readonly HttpClient _httpClient = new();
 
-        public static async Task<string> TranslateText(string Text)
+        /// <summary>
+        ///     translate text to english using ftapi, witch is an external free translation api, based on google translate.
+        /// </summary>
+        /// <param name="Text">Text to translate</param>
+        /// <returns>Translated text to desired language, if that fails it returnes same text</returns>
         {
             InitializedHttpClient();
             HttpResponseMessage responce = await _httpClient.GetAsync($"translate?dl=en&text={Uri.EscapeDataString(Text)}");
