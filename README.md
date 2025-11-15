@@ -1,5 +1,5 @@
 # Instaswarm
-![GPL License](https://img.shields.io/badge/License-GPLv3-blue.svg)
+![GPL License](https://img.shields.io/badge/License-GPLv3-blue.svg) [![Build and publish Docker image](https://github.com/demetrebadzaradze/InstaSwarm/actions/workflows/build-and-publish-docker-image.yml/badge.svg?branch=master)](https://github.com/demetrebadzaradze/InstaSwarm/actions/workflows/build-and-publish-docker-image.yml)
 
 **Are you wasting too much time scrolling reels, well this tool is for you, turn your addiction into an addiction with slight benefits of getting views online, share funny videos to this bot and build up an creator account completely hands free, no more friends telling you to stop sending your entire FYP. improve for better**
 
@@ -8,11 +8,11 @@
 ## Features
 - Manages multiple Instagram accounts from a single admin account.
 - Processes Instagram webhooks to handle reel uploads.
-- Dockerized for easy deployment on Linux servers.
+- Dockized for easy deployment.
 - Uses Tailscale for secure endpoint and video directory access.
 
 ## Prerequisites
-- Linux server
+- Host server
 - [Tailscale VPN](https://tailscale.com/)
 - Git
 - Docker Compose
@@ -23,6 +23,7 @@
 	```bash
 	git clone https://github.com/demetrebadzaradze/InstaSwarm.git
 	``` 
+	or just use prebuilt docker image `ghcr.io/demetrebadzaradze/instaswarm:latest` 
 2. Create directory for videos, this must be outside of the project directory:
 	```bash
 	mkdir -p ~/opt/video
@@ -61,26 +62,26 @@ Send a reel to the admin Instagram account(one that has webhooks configured) via
 	```bash
 	tailscale funnel --bg "~/opt/video"
 	```
-	and also the port where app is living (HTTPS port)
+	and also the port where app is running on (HTTPS port)
 	```bash
 	tailscale funnel --bg --https 10000 https+insecure://127.0.0.1:5001
 	```
 	
 ### Meta app Guide
 1. For this go over to [Facebook for developer website](https://developers.facebook.com/) and sign up.
-2. Make and [app](https://developers.facebook.com/apps/)
+2. Make an [app](https://developers.facebook.com/apps/)
 	- name it and enter your E-mal.
-	- is use case chouse `other`.
-	- app type `business`.
+	- for "use case" chouse `other`.
+	- "app type" - `business`.
 	- then add product `Instagram`
 	- go over to the `API Setup with Instagram login`
-	- and add an account or accounts that will be posting from App roles -> Roles -> Add people. and sent a invitation as `Instagram tester` with username (account needs to be converted as creator). then on that account accept invitation from profile -> gear icon -> apps and websites -> tester Invites and accept
+	- and add an account or accounts that will be posting, from `App roles` -> `Roles` -> `Add people`. and sent a invitation as `Instagram tester` with username (account needs to be converted as creator account). then, on that account, accept invitation from `profile` -> `gear icon` -> `apps and websites` -> `tester Invites` and accept
 	- now generate access token on `Instagram` -> `API Setup with Instagram login` page click on generate token on each account and save them for latter. (tip: sometimes it will give error after login if account is recently added so wait for like a hour or two and then retry)
-	- also whichever account you will be using as admin account( meaning messaging reels) enable webhooks for that account 
+	- also whichever account you will be using as admin account (meaning you messaging this account reels and it distributes it to other accounts) enable webhooks for that account. 
 	- for the configure webhooks as callback URL enter whatever Tailscale funnel gave you (Link) and add `/webhook/instagram` at the end.
-	- for `verify token` this is like a password for webhook for verification so enter something save and save that for later too.
-	- also here subscribe to messages.
-	- and after app is running hit `verify and save` (at tis point this is not ready).
+	- for `verify token` this is like a password for webhook for verification so enter something safe and save that for later, it is needed for `.env` configuration.
+	- also subscribe to messages in `webook fields` options.
+	- and after app is running hit `verify and save`.
 - also set the `App Mode` to `Live`
 
 ## .ENV guide
@@ -117,7 +118,7 @@ VIDEO_DOWNLOAD_PATH_ON_HOST=C:\Users\TG\Pictures\share
 8. `VIDEO_DOWNLOAD_PATH_ON_HOST` is where will the videos be saved temporally on host machine, this should be same that was funneled with Tailscale and this also must be an absolute path.
 
 ## Adding Cookies to `cookies.txt`
-Certain features of the InstaSwarm application require Instagram cookies to function properly. To enable these features, create a file named `cookies.txt` in the project directory and populate it with the necessary Instagram cookies.
+Certain features of the InstaSwarm application require Instagram cookies to function properly (e.g. some reels are not available if user cookies are not provided). To enable these features, create a file named `cookies.txt` in the project directory and populate it with the necessary Instagram cookies.
 
 ### How to Obtain Instagram Cookies
 The simplest way to retrieve Instagram cookies is by using a browser extension such as [Get Cookies.txt Locally](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc?hl=en-US&utm_source=ext_sidebar) for Google Chrome. Similar extensions are available for other browsers. Follow these steps:
